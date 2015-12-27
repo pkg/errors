@@ -1,0 +1,9 @@
+language: go
+go_import_path: github.com/pkg/errors
+go:
+  - 1.5.2
+  - 1.4.3
+  - tip
+
+script:
+  - go test -v ./...
