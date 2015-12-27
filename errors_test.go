@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"io"
 	"reflect"
 	"testing"
@@ -8,7 +9,7 @@ import (
 
 func TestNew(t *testing.T) {
 	got := New("test error")
-	want := errorString("test error")
+	want := fmt.Errorf("test error")
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("New: got %#v, want %#v", got, want)
@@ -20,8 +21,8 @@ func TestNewError(t *testing.T) {
 		err  string
 		want error
 	}{
-		{"", errorString("")},
-		{"foo", errorString("foo")},
+		{"", fmt.Errorf("")},
+		{"foo", fmt.Errorf("foo")},
 		{"foo", New("foo")},
 	}
 
@@ -42,7 +43,7 @@ type causeError struct {
 }
 
 func (e *causeError) Error() string { return "cause error" }
-func (e *causeError) Cause() error { return e.cause }
+func (e *causeError) Cause() error  { return e.cause }
 
 func TestCause(t *testing.T) {
 	tests := []struct {

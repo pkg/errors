@@ -1,15 +1,16 @@
 // Package errors implements functions to manipulate errors.
 package errors
 
-type errorString string
-
-func (e errorString) Error() string {
-	return string(e)
-}
+import "fmt"
 
 // New returns an error that formats as the given text.
 func New(text string) error {
-	return errorString(text)
+	return Errorf(text)
+}
+
+// Errorf returns a formatted error.
+func Errorf(format string, args ...interface{}) error {
+	return fmt.Errorf(format, args...)
 }
 
 // Cause returns the underlying cause of the error, if possible.
@@ -26,9 +27,10 @@ func Cause(err error) error {
 	if err == nil {
 		return nil
 	}
-	if err, ok := err.(interface {
+	type causer interface {
 		Cause() error
-	}); ok {
+	}
+	if err, ok := err.(causer); ok {
 		return err.Cause()
 	}
 	return err
