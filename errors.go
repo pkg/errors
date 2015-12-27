@@ -33,12 +33,3 @@ func Cause(err error) error {
 	}
 	return err
 }
-
-// cause implements the interface required by Cause.
-type cause struct {
-	err error
-}
-
-func (c *cause) Cause() error {
-	return c.err
-}
