@@ -38,11 +38,10 @@ type nilError struct{}
 func (nilError) Error() string { return "nil error" }
 
 type causeError struct {
-	err error
+	cause
 }
 
 func (e *causeError) Error() string { return "cause error" }
-func (e *causeError) Cause() error  { return e.err }
 
 func TestCause(t *testing.T) {
 	tests := []struct {
@@ -66,7 +65,7 @@ func TestCause(t *testing.T) {
 		want: io.EOF,
 	}, {
 		// caused error returns cause
-		err:  &causeError{err: io.EOF},
+		err:  &causeError{cause{err: io.EOF}},
 		want: io.EOF,
 	}}
 
