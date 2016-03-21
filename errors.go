@@ -1,11 +1,14 @@
 // Package errors implements functions to manipulate errors.
 package errors
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // New returns an error that formats as the given text.
 func New(text string) error {
-	return Errorf(text)
+	return errors.New(text)
 }
 
 // Errorf returns a formatted error.
