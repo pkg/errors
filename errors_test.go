@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -24,6 +25,7 @@ func TestNewError(t *testing.T) {
 		{"", fmt.Errorf("")},
 		{"foo", fmt.Errorf("foo")},
 		{"foo", New("foo")},
+		{"foo %s", errors.New("foo %s")},
 	}
 
 	for _, tt := range tests {
