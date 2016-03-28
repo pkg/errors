@@ -1,38 +1,10 @@
 package errors
 
 import (
-	"fmt"
 	"io"
 	"reflect"
 	"testing"
 )
-
-func TestNew(t *testing.T) {
-	got := New("test error")
-	want := fmt.Errorf("test error")
-
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("New: got %#v, want %#v", got, want)
-	}
-}
-
-func TestNewError(t *testing.T) {
-	tests := []struct {
-		err  string
-		want error
-	}{
-		{"", fmt.Errorf("")},
-		{"foo", fmt.Errorf("foo")},
-		{"foo", New("foo")},
-	}
-
-	for _, tt := range tests {
-		got := New(tt.err)
-		if got.Error() != tt.want.Error() {
-			t.Errorf("New.Error(): got: %q, want %q", got, tt.want)
-		}
-	}
-}
 
 type nilError struct{}
 

@@ -1,24 +1,35 @@
 // Package errors implements functions to manipulate errors.
 package errors
 
-import "fmt"
-
-// New returns an error that formats as the given text.
-func New(text string) error {
-	return Errorf(text)
+type e struct {
+	cause   error
+	message string
 }
 
-// Errorf returns a formatted error.
-func Errorf(format string, args ...interface{}) error {
-	return fmt.Errorf(format, args...)
+func (e *e) Error() string {
+	return e.message + ": " + e.cause.Error()
+}
+
+func (e *e) Cause() error {
+	return e.cause
+}
+
+// Wrap returns an error annotating the cause with message.
+// If cause is nil, Wrap returns nil.
+func Wrap(cause error, message string) error {
+	if cause == nil {
+		return nil
+	}
+	return &e{cause: cause, message: message}
 }
 
 // Cause returns the underlying cause of the error, if possible.
 // An error value has a cause if it implements the following
-// method:
+// interface:
 //
-// Cause() error
-//
+//     type Causer interface {
+//            Cause() error
+//     }
 //
 // If the error does not implement Cause, the original error will
 // be returned. If the error is nil, nil will be returned without further
