@@ -2,6 +2,7 @@ package errors_test
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pkg/errors"
 )
@@ -31,5 +32,15 @@ func ExampleCause() {
 	fmt.Println(errors.Cause(err))
 
 	// Output: outer: middle: inner: error
+	// error
+}
+
+func ExampleFprint() {
+	err := fn()
+	errors.Fprint(os.Stdout, err)
+
+	// Output: outer
+	// middle
+	// inner
 	// error
 }
