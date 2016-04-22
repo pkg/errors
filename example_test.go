@@ -18,7 +18,7 @@ func ExampleNew_Fprint() {
 	err := errors.New("whoops")
 	errors.Fprint(os.Stdout, err)
 
-	// Output: github.com/pkg/errors/example_test.go:5: whoops
+	// Output: github.com/pkg/errors/example_test.go:18: whoops
 }
 
 func ExampleWrap() {
