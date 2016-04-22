@@ -28,12 +28,13 @@ func (l loc) Location() (string, int) {
 
 // New returns an error that formats as the given text.
 func New(text string) error {
+	pc, _, _, _ := runtime.Caller(1)
 	return struct {
 		error
 		loc
 	}{
 		fmt.Errorf(text),
-		loc(pc()),
+		loc(pc),
 	}
 }
 
@@ -57,10 +58,11 @@ func Wrap(cause error, message string) error {
 	if cause == nil {
 		return nil
 	}
+	pc, _, _, _ := runtime.Caller(1)
 	return &e{
 		cause:   cause,
 		message: message,
-		loc:     loc(pc()),
+		loc:     loc(pc),
 	}
 }
 
@@ -131,9 +133,4 @@ func Fprint(w io.Writer, err error) {
 		}
 		err = cause.Cause()
 	}
-}
-
-func pc() uintptr {
-	pc, _, _, _ := runtime.Caller(2)
-	return pc
 }
