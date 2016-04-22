@@ -23,7 +23,10 @@ func ExampleWrap() {
 }
 
 func fn() error {
-	return errors.Wrap(errors.Wrap(errors.Wrap(errors.New("error"), "inner"), "middle"), "outer")
+	e1 := errors.New("error")
+	e2 := errors.Wrap(e1, "inner")
+	e3 := errors.Wrap(e2, "middle")
+	return errors.Wrap(e3, "outer")
 }
 
 func ExampleCause() {
@@ -39,8 +42,8 @@ func ExampleFprint() {
 	err := fn()
 	errors.Fprint(os.Stdout, err)
 
-	// Output: outer
-	// middle
-	// inner
+	// Output: github.com/pkg/errors/example_test.go:29: outer
+	// github.com/pkg/errors/example_test.go:28: middle
+	// github.com/pkg/errors/example_test.go:27: inner
 	// error
 }

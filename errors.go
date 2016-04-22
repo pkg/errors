@@ -6,23 +6,41 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strings"
 )
+
+type loc uintptr
+
+func (l loc) Location() (string, int) {
+	pc := uintptr(l)
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		return "unknown", 0
+	}
+
+	_, prefix, _, _ := runtime.Caller(0)
+	file, line := fn.FileLine(pc)
+	if i := strings.LastIndex(prefix, "github.com/pkg/errors"); i > 0 {
+		file = file[i:]
+	}
+	return file, line
+}
 
 // New returns an error that formats as the given text.
 func New(text string) error {
 	return struct {
 		error
-		pc uintptr
+		loc
 	}{
 		fmt.Errorf(text),
-		pc(),
+		loc(pc()),
 	}
 }
 
 type e struct {
 	cause   error
 	message string
-	pc      uintptr
+	loc
 }
 
 func (e *e) Error() string {
@@ -42,7 +60,7 @@ func Wrap(cause error, message string) error {
 	return &e{
 		cause:   cause,
 		message: message,
-		pc:      pc(),
+		loc:     loc(pc()),
 	}
 }
 
@@ -77,6 +95,15 @@ type locationer interface {
 }
 
 // Print prints the error to Stderr.
+// If the error implements the Causer interface described in Cause
+// Print will recurse into the error's cause.
+// If the error implements the inteface:
+//
+//     type Location interface {
+//            Location() (file string, line int)
+//     }
+//
+// Print will also print the file and line of the error.
 func Print(err error) {
 	Fprint(os.Stderr, err)
 }
@@ -89,7 +116,7 @@ func Fprint(w io.Writer, err error) {
 		location, ok := err.(locationer)
 		if ok {
 			file, line := location.Location()
-			fmt.Fprint(w, "%s:%d: ", file, line)
+			fmt.Fprintf(w, "%s:%d: ", file, line)
 		}
 		switch err := err.(type) {
 		case *e:

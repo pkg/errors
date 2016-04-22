@@ -124,10 +124,10 @@ func TestFprint(t *testing.T) {
 		want: "error\n",
 	}, {
 		err:  Wrap(x, "message"),
-		want: "message\nerror\n",
+		want: "github.com/pkg/errors/errors_test.go:126: message\nerror\n",
 	}, {
 		err:  Wrap(Wrap(x, "message"), "another message"),
-		want: "another message\nmessage\nerror\n",
+		want: "github.com/pkg/errors/errors_test.go:129: another message\ngithub.com/pkg/errors/errors_test.go:129: message\nerror\n",
 	}}
 
 	for i, tt := range tests {
