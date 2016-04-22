@@ -14,6 +14,13 @@ func ExampleNew() {
 	// Output: whoops
 }
 
+func ExampleNew_Fprint() {
+	err := errors.New("whoops")
+	errors.Fprint(os.Stdout, err)
+
+	// Output: github.com/pkg/errors/example_test.go:5: whoops
+}
+
 func ExampleWrap() {
 	cause := errors.New("whoops")
 	err := errors.Wrap(cause, "oh noes")
@@ -42,8 +49,8 @@ func ExampleFprint() {
 	err := fn()
 	errors.Fprint(os.Stdout, err)
 
-	// Output: github.com/pkg/errors/example_test.go:29: outer
-	// github.com/pkg/errors/example_test.go:28: middle
-	// github.com/pkg/errors/example_test.go:27: inner
-	// error
+	// Output: github.com/pkg/errors/example_test.go:36: outer
+	// github.com/pkg/errors/example_test.go:35: middle
+	// github.com/pkg/errors/example_test.go:34: inner
+	// github.com/pkg/errors/example_test.go:33: error
 }
