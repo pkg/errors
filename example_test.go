@@ -14,7 +14,7 @@ func ExampleNew() {
 	// Output: whoops
 }
 
-func ExampleNew_Fprint() {
+func ExampleNew_fprint() {
 	err := errors.New("whoops")
 	errors.Fprint(os.Stdout, err)
 
