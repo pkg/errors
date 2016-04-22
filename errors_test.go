@@ -1,13 +1,14 @@
 package errors
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"reflect"
 	"testing"
 )
 
-func TestNewError(t *testing.T) {
+func TestNew(t *testing.T) {
 	tests := []struct {
 		err  string
 		want error
@@ -25,23 +26,28 @@ func TestNewError(t *testing.T) {
 	}
 }
 
-func TestNewEqualNew(t *testing.T) {
-	// test that two calls to New return the same error when called from the same location
-	var errs []error
-	for i := 0; i < 2; i++ {
-		errs = append(errs, New("error"))
-	}
-	a, b := errs[0], errs[1]
-	if !reflect.DeepEqual(a, b) {
-		t.Errorf("Expected two calls to New from the same location to give the same error: %#v, %#v", a, b)
+func TestWrapNil(t *testing.T) {
+	got := Wrap(nil, "no error")
+	if got != nil {
+		t.Errorf("Wrap(nil, \"no error\"): got %#v, expected nil", got)
 	}
 }
 
-func TestNewNotEqualNew(t *testing.T) {
-	// test that two calls to New return different errors when called from different locations
-	a, b := New("error"), New("error")
-	if reflect.DeepEqual(a, b) {
-		t.Errorf("Expected two calls to New from the different locations give the same error: %#v, %#v", a, b)
+func TestWrap(t *testing.T) {
+	tests := []struct {
+		err     error
+		message string
+		want    string
+	}{
+		{io.EOF, "read error", "read error: EOF"},
+		{Wrap(io.EOF, "read error"), "client error", "client error: read error: EOF"},
+	}
+
+	for _, tt := range tests {
+		got := Wrap(tt.err, tt.message).Error()
+		if got != tt.want {
+			t.Errorf("Wrap(%v, %q): got: %v, want %v", tt.err, tt.message, got, tt.want)
+		}
 	}
 }
 
@@ -94,23 +100,42 @@ func TestCause(t *testing.T) {
 	}
 }
 
-func TestTraceNotEqual(t *testing.T) {
-	// test that two calls to trace do not return identical errors
-	err := New("error")
-	a := err
-	var errs []error
-	for i := 0; i < 2; i++ {
-		err = Trace(err)
-		errs = append(errs, err)
-	}
-	b, c := errs[0], errs[1]
-	if reflect.DeepEqual(a, b) {
-		t.Errorf("a and b equal: %#v, %#v", a, b)
-	}
-	if reflect.DeepEqual(b, c) {
-		t.Errorf("b and c equal: %#v, %#v", b, c)
-	}
-	if reflect.DeepEqual(a, c) {
-		t.Errorf("a and c equal: %#v, %#v", a, c)
+func TestFprint(t *testing.T) {
+	x := New("error")
+	tests := []struct {
+		err  error
+		want string
+	}{{
+		// nil error is nil
+		err: nil,
+	}, {
+		// explicit nil error is nil
+		err: (error)(nil),
+	}, {
+		// uncaused error is unaffected
+		err:  io.EOF,
+		want: "EOF\n",
+	}, {
+		// caused error returns cause
+		err:  &causeError{cause: io.EOF},
+		want: "cause error\nEOF\n",
+	}, {
+		err:  x, // return from errors.New
+		want: "error\n",
+	}, {
+		err:  Wrap(x, "message"),
+		want: "message\nerror\n",
+	}, {
+		err:  Wrap(Wrap(x, "message"), "another message"),
+		want: "another message\nmessage\nerror\n",
+	}}
+
+	for i, tt := range tests {
+		var w bytes.Buffer
+		Fprint(&w, tt.err)
+		got := w.String()
+		if got != tt.want {
+			t.Errorf("test %d: Fprint(w, %q): got %q, want %q", i+1, tt.err, got, tt.want)
+		}
 	}
 }
