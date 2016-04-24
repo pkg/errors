@@ -19,6 +19,7 @@
 //      _, err := ioutil.ReadAll(r)
 //      if err != nil {
 //              return errors.Wrap(err, "read failed")
+//      }
 //
 // In addition, errors.Wrap records the file and line where it was called,
 // allowing the programmer to retrieve the path to the original error.
