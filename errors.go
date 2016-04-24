@@ -59,7 +59,7 @@ import (
 type loc uintptr
 
 func (l loc) Location() (string, int) {
-	pc := uintptr(l)
+	pc := uintptr(l) - 1
 	fn := runtime.FuncForPC(pc)
 	if fn == nil {
 		return "unknown", 0
