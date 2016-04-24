@@ -41,4 +41,12 @@ default:
 
 Would you like to know more? Read the [original presentation](https://t.co/GGPr7HJZYR), blog post coming soon.
 
-Licence: MIT
+## Contributing
+
+We welcome pull requests, bug fixes and issue reports. With that said, the bar for adding new symbols to this package is intentionally set high.
+
+Before proposing a change, please discuss your change by raising an issue.
+
+## Licence
+
+MIT
