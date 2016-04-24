@@ -17,7 +17,7 @@ func TestNew(t *testing.T) {
 		{"", fmt.Errorf("")},
 		{"foo", fmt.Errorf("foo")},
 		{"foo", New("foo")},
-    {"string with format specifiers: %v", errors.New("string with format specifiers: %v")},
+		{"string with format specifiers: %v", errors.New("string with format specifiers: %v")},
 	}
 
 	for _, tt := range tests {

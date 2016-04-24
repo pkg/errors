@@ -27,7 +27,7 @@
 // Retrieving the cause of an error
 //
 // Using errors.Wrap constructs a stack of errors, adding context to the
-// preceeding error. Depending on the nature of the error it may be necessary
+// preceding error. Depending on the nature of the error it may be necessary
 // to recerse the operation of errors.Wrap to retrieve the original error
 // for inspection. Any error value which implements this interface
 //
