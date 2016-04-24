@@ -2,6 +2,7 @@ package errors
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -16,6 +17,7 @@ func TestNew(t *testing.T) {
 		{"", fmt.Errorf("")},
 		{"foo", fmt.Errorf("foo")},
 		{"foo", New("foo")},
+    {"string with format specifiers: %v", errors.New("string with format specifiers: %v")},
 	}
 
 	for _, tt := range tests {
@@ -121,13 +123,13 @@ func TestFprint(t *testing.T) {
 		want: "cause error\nEOF\n",
 	}, {
 		err:  x, // return from errors.New
-		want: "github.com/pkg/errors/errors_test.go:104: error\n",
+		want: "github.com/pkg/errors/errors_test.go:106: error\n",
 	}, {
 		err:  Wrap(x, "message"),
-		want: "github.com/pkg/errors/errors_test.go:126: message\ngithub.com/pkg/errors/errors_test.go:104: error\n",
+		want: "github.com/pkg/errors/errors_test.go:128: message\ngithub.com/pkg/errors/errors_test.go:106: error\n",
 	}, {
 		err:  Wrap(Wrap(x, "message"), "another message"),
-		want: "github.com/pkg/errors/errors_test.go:129: another message\ngithub.com/pkg/errors/errors_test.go:129: message\ngithub.com/pkg/errors/errors_test.go:104: error\n",
+		want: "github.com/pkg/errors/errors_test.go:131: another message\ngithub.com/pkg/errors/errors_test.go:131: message\ngithub.com/pkg/errors/errors_test.go:106: error\n",
 	}}
 
 	for i, tt := range tests {
