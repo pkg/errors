@@ -2,6 +2,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -33,7 +34,7 @@ func New(text string) error {
 		error
 		loc
 	}{
-		fmt.Errorf(text),
+		errors.New(text),
 		loc(pc),
 	}
 }
