@@ -1,6 +1,6 @@
 // Package errors implements functions for manipulating errors.
 //
-// The tranditional error handling idiom in Go is roughly akin to
+// The traditional error handling idiom in Go is roughly akin to
 //
 //      if err != nil {
 //              return err

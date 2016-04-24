@@ -2,7 +2,7 @@
 
 Package errors implements functions for manipulating errors.
 
-The tranditional error handling idiom in Go is roughly akin to
+The traditional error handling idiom in Go is roughly akin to
 ```
 if err != nil {
         return err
@@ -23,7 +23,7 @@ In addition, errors.Wrap records the file and line where it was called, allowing
 
 ## Retrieving the cause of an error
 
-Using errors.Wrap constructs a stack of errors, adding context to the preceeding error. Depending on the nature of the error it may be necessary to recerse the operation of errors.Wrap to retrieve the original error for inspection. Any error value which implements this interface
+Using errors.Wrap constructs a stack of errors, adding context to the preceding error. Depending on the nature of the error it may be necessary to recurse the operation of errors.Wrap to retrieve the original error for inspection. Any error value which implements this interface
 ```
 type causer interface {
      Cause() error
