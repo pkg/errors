@@ -54,3 +54,11 @@ func ExampleFprint() {
 	// github.com/pkg/errors/example_test.go:34: inner
 	// github.com/pkg/errors/example_test.go:33: error
 }
+
+func ExampleWrapf() {
+	cause := errors.New("whoops")
+	err := errors.Wrapf(cause, "oh noes #%d", 2)
+	fmt.Println(err)
+
+	// Output: oh noes #2: whoops
+}

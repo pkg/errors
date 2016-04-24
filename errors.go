@@ -113,6 +113,20 @@ func Wrap(cause error, message string) error {
 	}
 }
 
+// Wrapf returns an error annotating the cause with the format specifier.
+// If cause is nil, Wrapf returns nil.
+func Wrapf(cause error, format string, args ...interface{}) error {
+	if cause == nil {
+		return nil
+	}
+	pc, _, _, _ := runtime.Caller(1)
+	return &e{
+		cause:   cause,
+		message: fmt.Sprintf(format, args...),
+		loc:     loc(pc),
+	}
+}
+
 type causer interface {
 	Cause() error
 }
