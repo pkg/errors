@@ -130,6 +130,9 @@ func TestFprint(t *testing.T) {
 	}, {
 		err:  Wrap(Wrap(x, "message"), "another message"),
 		want: "github.com/pkg/errors/errors_test.go:131: another message\ngithub.com/pkg/errors/errors_test.go:131: message\ngithub.com/pkg/errors/errors_test.go:106: error\n",
+	}, {
+		err:  Wrapf(x, "message"),
+		want: "github.com/pkg/errors/errors_test.go:134: message\ngithub.com/pkg/errors/errors_test.go:106: error\n",
 	}}
 
 	for i, tt := range tests {
@@ -138,6 +141,32 @@ func TestFprint(t *testing.T) {
 		got := w.String()
 		if got != tt.want {
 			t.Errorf("test %d: Fprint(w, %q): got %q, want %q", i+1, tt.err, got, tt.want)
+		}
+	}
+}
+
+func TestWrapfNil(t *testing.T) {
+	got := Wrapf(nil, "no error")
+	if got != nil {
+		t.Errorf("Wrapf(nil, \"no error\"): got %#v, expected nil", got)
+	}
+}
+
+func TestWrapf(t *testing.T) {
+	tests := []struct {
+		err     error
+		message string
+		want    string
+	}{
+		{io.EOF, "read error", "read error: EOF"},
+		{Wrapf(io.EOF, "read error without format specifiers"), "client error", "client error: read error without format specifiers: EOF"},
+		{Wrapf(io.EOF, "read error with %d format specifier", 1), "client error", "client error: read error with 1 format specifier: EOF"},
+	}
+
+	for _, tt := range tests {
+		got := Wrapf(tt.err, tt.message).Error()
+		if got != tt.want {
+			t.Errorf("Wrapf(%v, %q): got: %v, want %v", tt.err, tt.message, got, tt.want)
 		}
 	}
 }
