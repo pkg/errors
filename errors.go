@@ -91,15 +91,15 @@ func (l loc) Location() (string, int) {
 	// leading separator.
 	const sep = "/"
 	goal := strings.Count(fn.Name(), sep) + 2
-	pathCnt := 0
 	i := len(file)
-	for pathCnt < goal {
+	for n := 0; n < goal; n++ {
 		i = strings.LastIndex(file[:i], sep)
 		if i == -1 {
+			// not enough separators found, set i so that the slice expression
+			// below leaves file unmodified
 			i = -len(sep)
 			break
 		}
-		pathCnt++
 	}
 	// get back to 0 or trim the leading seperator
 	file = file[i+len(sep):]
