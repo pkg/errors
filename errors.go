@@ -189,10 +189,6 @@ func Cause(err error) error {
 	return err
 }
 
-type locationer interface {
-	Location() (string, int)
-}
-
 // Print prints the error to Stderr.
 // If the error implements the Causer interface described in Cause
 // Print will recurse into the error's cause.
@@ -211,10 +207,13 @@ func Print(err error) {
 // The format of the output is the same as Print.
 // If err is nil, nothing is printed.
 func Fprint(w io.Writer, err error) {
+	type location interface {
+		Location() (string, int)
+	}
+
 	for err != nil {
-		location, ok := err.(locationer)
-		if ok {
-			file, line := location.Location()
+		if err, ok := err.(location); ok {
+			file, line := err.Location()
 			fmt.Fprintf(w, "%s:%d: ", file, line)
 		}
 		switch err := err.(type) {
