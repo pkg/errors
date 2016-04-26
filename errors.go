@@ -142,11 +142,7 @@ func Wrap(cause error, message string) error {
 		return nil
 	}
 	pc, _, _, _ := runtime.Caller(1)
-	return &e{
-		cause:    cause,
-		message:  message,
-		location: location(pc),
-	}
+	return wrap(cause, message, pc)
 }
 
 // Wrapf returns an error annotating the cause with the format specifier.
@@ -156,9 +152,13 @@ func Wrapf(cause error, format string, args ...interface{}) error {
 		return nil
 	}
 	pc, _, _, _ := runtime.Caller(1)
+	return wrap(cause, fmt.Sprintf(format, args...), pc)
+}
+
+func wrap(err error, msg string, pc uintptr) error {
 	return &e{
-		cause:    cause,
-		message:  fmt.Sprintf(format, args...),
+		cause:    err,
+		message:  msg,
 		location: location(pc),
 	}
 }
