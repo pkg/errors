@@ -39,7 +39,7 @@ default:
 }
 ```
 
-Would you like to know more? Read the [original presentation](https://t.co/GGPr7HJZYR), blog post coming soon.
+Would you like to know more? Read the [blog post](http://dave.cheney.net/2016/04/27/dont-just-check-errors-handle-them-gracefully).
 
 ## Contributing
 
