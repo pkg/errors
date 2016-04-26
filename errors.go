@@ -56,9 +56,11 @@ import (
 	"strings"
 )
 
-type loc uintptr
+// location represents a program counter that
+// implements the Location() method.
+type location uintptr
 
-func (l loc) Location() (string, int) {
+func (l location) Location() (string, int) {
 	pc := uintptr(l) - 1
 	fn := runtime.FuncForPC(pc)
 	if fn == nil {
@@ -112,17 +114,17 @@ func New(text string) error {
 	pc, _, _, _ := runtime.Caller(1)
 	return struct {
 		error
-		loc
+		location
 	}{
 		errors.New(text),
-		loc(pc),
+		location(pc),
 	}
 }
 
 type e struct {
 	cause   error
 	message string
-	loc
+	location
 }
 
 func (e *e) Error() string {
@@ -141,9 +143,9 @@ func Wrap(cause error, message string) error {
 	}
 	pc, _, _, _ := runtime.Caller(1)
 	return &e{
-		cause:   cause,
-		message: message,
-		loc:     loc(pc),
+		cause:    cause,
+		message:  message,
+		location: location(pc),
 	}
 }
 
@@ -155,9 +157,9 @@ func Wrapf(cause error, format string, args ...interface{}) error {
 	}
 	pc, _, _, _ := runtime.Caller(1)
 	return &e{
-		cause:   cause,
-		message: fmt.Sprintf(format, args...),
-		loc:     loc(pc),
+		cause:    cause,
+		message:  fmt.Sprintf(format, args...),
+		location: location(pc),
 	}
 }
 
