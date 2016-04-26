@@ -130,6 +130,19 @@ func (c cause) Error() string   { return c.Message() + ": " + c.Cause().Error() 
 func (c cause) Cause() error    { return c.cause }
 func (c cause) Message() string { return c.message }
 
+// Errorf formats according to a format specifier and returns the string
+// as a value that satisfies error.
+func Errorf(format string, args ...interface{}) error {
+	pc, _, _, _ := runtime.Caller(1)
+	return struct {
+		error
+		location
+	}{
+		fmt.Errorf(format, args...),
+		location(pc),
+	}
+}
+
 // Wrap returns an error annotating the cause with message.
 // If cause is nil, Wrap returns nil.
 func Wrap(cause error, message string) error {

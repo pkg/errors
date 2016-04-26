@@ -62,3 +62,10 @@ func ExampleWrapf() {
 
 	// Output: oh noes #2: whoops
 }
+
+func ExampleErrorf() {
+	err := errors.Errorf("whoops: %s", "foo")
+	errors.Fprint(os.Stdout, err)
+
+	// Output: github.com/pkg/errors/example_test.go:67: whoops: foo
+}
