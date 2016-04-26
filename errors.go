@@ -56,9 +56,11 @@ import (
 	"strings"
 )
 
-type loc uintptr
+// location represents a program counter that
+// implements the Location() method.
+type location uintptr
 
-func (l loc) Location() (string, int) {
+func (l location) Location() (string, int) {
 	pc := uintptr(l) - 1
 	fn := runtime.FuncForPC(pc)
 	if fn == nil {
@@ -112,26 +114,21 @@ func New(text string) error {
 	pc, _, _, _ := runtime.Caller(1)
 	return struct {
 		error
-		loc
+		location
 	}{
 		errors.New(text),
-		loc(pc),
+		location(pc),
 	}
 }
 
-type e struct {
+type cause struct {
 	cause   error
 	message string
-	loc
 }
 
-func (e *e) Error() string {
-	return e.message + ": " + e.cause.Error()
-}
-
-func (e *e) Cause() error {
-	return e.cause
-}
+func (c cause) Error() string   { return c.Message() + ": " + c.Cause().Error() }
+func (c cause) Cause() error    { return c.cause }
+func (c cause) Message() string { return c.message }
 
 // Wrap returns an error annotating the cause with message.
 // If cause is nil, Wrap returns nil.
@@ -140,11 +137,7 @@ func Wrap(cause error, message string) error {
 		return nil
 	}
 	pc, _, _, _ := runtime.Caller(1)
-	return &e{
-		cause:   cause,
-		message: message,
-		loc:     loc(pc),
-	}
+	return wrap(cause, message, pc)
 }
 
 // Wrapf returns an error annotating the cause with the format specifier.
@@ -154,10 +147,19 @@ func Wrapf(cause error, format string, args ...interface{}) error {
 		return nil
 	}
 	pc, _, _, _ := runtime.Caller(1)
-	return &e{
-		cause:   cause,
-		message: fmt.Sprintf(format, args...),
-		loc:     loc(pc),
+	return wrap(cause, fmt.Sprintf(format, args...), pc)
+}
+
+func wrap(err error, msg string, pc uintptr) error {
+	return struct {
+		cause
+		location
+	}{
+		cause{
+			cause:   err,
+			message: msg,
+		},
+		location(pc),
 	}
 }
 
@@ -187,10 +189,6 @@ func Cause(err error) error {
 	return err
 }
 
-type locationer interface {
-	Location() (string, int)
-}
-
 // Print prints the error to Stderr.
 // If the error implements the Causer interface described in Cause
 // Print will recurse into the error's cause.
@@ -209,15 +207,21 @@ func Print(err error) {
 // The format of the output is the same as Print.
 // If err is nil, nothing is printed.
 func Fprint(w io.Writer, err error) {
+	type location interface {
+		Location() (string, int)
+	}
+	type message interface {
+		Message() string
+	}
+
 	for err != nil {
-		location, ok := err.(locationer)
-		if ok {
-			file, line := location.Location()
+		if err, ok := err.(location); ok {
+			file, line := err.Location()
 			fmt.Fprintf(w, "%s:%d: ", file, line)
 		}
 		switch err := err.(type) {
-		case *e:
-			fmt.Fprintln(w, err.message)
+		case message:
+			fmt.Fprintln(w, err.Message())
 		default:
 			fmt.Fprintln(w, err.Error())
 		}
