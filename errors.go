@@ -103,7 +103,7 @@ func (l location) Location() (string, int) {
 			break
 		}
 	}
-	// get back to 0 or trim the leading seperator
+	// get back to 0 or trim the leading separator
 	file = file[i+len(sep):]
 
 	return file, line
