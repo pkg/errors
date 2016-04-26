@@ -121,19 +121,14 @@ func New(text string) error {
 	}
 }
 
-type e struct {
+type cause struct {
 	cause   error
 	message string
-	location
 }
 
-func (e *e) Error() string {
-	return e.message + ": " + e.cause.Error()
-}
-
-func (e *e) Cause() error {
-	return e.cause
-}
+func (c cause) Error() string   { return c.Message() + ": " + c.Cause().Error() }
+func (c cause) Cause() error    { return c.cause }
+func (c cause) Message() string { return c.message }
 
 // Wrap returns an error annotating the cause with message.
 // If cause is nil, Wrap returns nil.
@@ -156,10 +151,15 @@ func Wrapf(cause error, format string, args ...interface{}) error {
 }
 
 func wrap(err error, msg string, pc uintptr) error {
-	return &e{
-		cause:    err,
-		message:  msg,
-		location: location(pc),
+	return struct {
+		cause
+		location
+	}{
+		cause{
+			cause:   err,
+			message: msg,
+		},
+		location(pc),
 	}
 }
 
@@ -210,6 +210,9 @@ func Fprint(w io.Writer, err error) {
 	type location interface {
 		Location() (string, int)
 	}
+	type message interface {
+		Message() string
+	}
 
 	for err != nil {
 		if err, ok := err.(location); ok {
@@ -217,8 +220,8 @@ func Fprint(w io.Writer, err error) {
 			fmt.Fprintf(w, "%s:%d: ", file, line)
 		}
 		switch err := err.(type) {
-		case *e:
-			fmt.Fprintln(w, err.message)
+		case message:
+			fmt.Fprintln(w, err.Message())
 		default:
 			fmt.Fprintln(w, err.Error())
 		}
