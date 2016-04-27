@@ -19,17 +19,17 @@ if err != nil {
         return errors.Wrap(err, "read failed")
 }
 ```
-In addition, errors.Wrap records the file and line where it was called, allowing the programmer to retrieve the path to the original error.
+In addition, `errors.Wrap` records the file and line where it was called, allowing the programmer to retrieve the path to the original error.
 
 ## Retrieving the cause of an error
 
-Using errors.Wrap constructs a stack of errors, adding context to the preceding error. Depending on the nature of the error it may be necessary to recurse the operation of errors.Wrap to retrieve the original error for inspection. Any error value which implements this interface
+Using `errors.Wrap` constructs a stack of errors, adding context to the preceding error. Depending on the nature of the error it may be necessary to recurse the operation of errors.Wrap to retrieve the original error for inspection. Any error value which implements this interface can be inspected by `errors.Cause`.
 ```
 type causer interface {
      Cause() error
 }
 ```
-Can be inspected by errors.Cause which will recursively retrieve the topmost error which does nor implement causer, which is assumed to be the original cause. For example:
+`errors.Cause` will recursively retrieve the topmost error which does nor implement causer, which is assumed to be the original cause. For example:
 ```
 switch err := errors.Cause(err).(type) {
 case *MyError:

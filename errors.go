@@ -28,16 +28,16 @@
 //
 // Using errors.Wrap constructs a stack of errors, adding context to the
 // preceding error. Depending on the nature of the error it may be necessary
-// to recerse the operation of errors.Wrap to retrieve the original error
+// to reverse the operation of errors.Wrap to retrieve the original error
 // for inspection. Any error value which implements this interface
 //
 //     type causer interface {
 //          Cause() error
 //     }
 //
-// Can be inspected by errors.Cause which will recursively retrieve the topmost
-// error which does nor implement causer, which is assumed to be the original
-// cause. For example:
+// can be inspected by errors.Cause. errors.Cause will recursively retrieve
+// the topmost error which does nor implement causer, which is assumed to be
+// the original cause. For example:
 //
 //     switch err := errors.Cause(err).(type) {
 //     case *MyError:
