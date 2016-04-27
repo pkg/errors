@@ -67,7 +67,7 @@ func (l location) Location() (string, int) {
 		return "unknown", 0
 	}
 
-	file, line := fn.FileLine(pc)
+
 
 	// Here we want to get the source file path relative to the compile time
 	// GOPATH. As of Go 1.6.x there is no direct way to know the compiled
@@ -91,22 +91,16 @@ func (l location) Location() (string, int) {
 	// path until it finds two more than in the function name and then move
 	// one character forward to preserve the initial path segment without a
 	// leading separator.
-	const sep = "/"
-	goal := strings.Count(fn.Name(), sep) + 2
-	i := len(file)
-	for n := 0; n < goal; n++ {
-		i = strings.LastIndex(file[:i], sep)
-		if i == -1 {
-			// not enough separators found, set i so that the slice expression
-			// below leaves file unmodified
-			i = -len(sep)
-			break
-		}
+	fnName := fn.Name()
+	file, line := fn.FileLine(pc)
+	splits := strings.Split(fnName,".")
+	index := strings.Index(file,splits[0])
+	if index < 0 {
+		return "unknown", 0
 	}
-	// get back to 0 or trim the leading separator
-	file = file[i+len(sep):]
 
-	return file, line
+
+	return file[index:], line
 }
 
 // New returns an error that formats as the given text.
