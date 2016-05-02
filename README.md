@@ -29,7 +29,7 @@ type causer interface {
      Cause() error
 }
 ```
-`errors.Cause` will recursively retrieve the topmost error which does nor implement causer, which is assumed to be the original cause. For example:
+`errors.Cause` will recursively retrieve the topmost error which does not implement `causer`, which is assumed to be the original cause. For example:
 ```
 switch err := errors.Cause(err).(type) {
 case *MyError:
