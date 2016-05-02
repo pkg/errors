@@ -36,7 +36,7 @@
 //     }
 //
 // can be inspected by errors.Cause. errors.Cause will recursively retrieve
-// the topmost error which does nor implement causer, which is assumed to be
+// the topmost error which does not implement causer, which is assumed to be
 // the original cause. For example:
 //
 //     switch err := errors.Cause(err).(type) {
