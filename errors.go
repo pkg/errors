@@ -125,7 +125,7 @@ func New(text string) error {
 	return newErr(errors.New(text))
 }
 
-// WithLocation is like New but wraps the location for an existing error
+// WithLocation is like New but wraps the location for an existing error.
 func WithLocation(err error) error {
 	return newErr(err)
 }
