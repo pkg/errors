@@ -109,16 +109,25 @@ func (l location) Location() (string, int) {
 	return file, line
 }
 
-// New returns an error that formats as the given text.
-func New(text string) error {
-	pc, _, _, _ := runtime.Caller(1)
+func newErr(err error) error {
+	pc, _, _, _ := runtime.Caller(2)
 	return struct {
 		error
 		location
 	}{
-		errors.New(text),
+		err,
 		location(pc),
 	}
+}
+
+// New returns an error that formats as the given text.
+func New(text string) error {
+	return newErr(errors.New(text))
+}
+
+// WithLocation is like New but wraps the location for an existing error.
+func WithLocation(err error) error {
+	return newErr(err)
 }
 
 type cause struct {
