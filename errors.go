@@ -1,4 +1,4 @@
-// Package errors implements functions for manipulating errors.
+// Package errors provides simple error handling primitives.
 //
 // The traditional error handling idiom in Go is roughly akin to
 //
