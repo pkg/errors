@@ -19,14 +19,21 @@ if err != nil {
         return errors.Wrap(err, "read failed")
 }
 ```
-In addition, `errors.Wrap` records the file and line where it was called, allowing the programmer to retrieve the path to the original error.
+## Retrieving the stack trace of an error or wrapper
 
+`New`, `Errorf`, `Wrap`, and `Wrapf` record a stack trace at the point they are invoked.
+This information can be retrieved with the following interface.
+```go
+type Stack interface {
+        Stack() []uintptr
+}
+```
 ## Retrieving the cause of an error
 
 Using `errors.Wrap` constructs a stack of errors, adding context to the preceding error. Depending on the nature of the error it may be necessary to recurse the operation of errors.Wrap to retrieve the original error for inspection. Any error value which implements this interface can be inspected by `errors.Cause`.
 ```go
 type causer interface {
-     Cause() error
+        Cause() error
 }
 ```
 `errors.Cause` will recursively retrieve the topmost error which does not implement `causer`, which is assumed to be the original cause. For example:
