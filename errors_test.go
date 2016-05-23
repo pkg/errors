@@ -187,3 +187,42 @@ func TestErrorf(t *testing.T) {
 		}
 	}
 }
+
+func TestStack(t *testing.T) {
+	type fileline struct {
+		file string
+		line int
+	}
+	tests := []struct {
+		err  error
+		want []fileline
+	}{{
+		New("ooh"), []fileline{
+			{"github.com/pkg/errors/errors_test.go", 200},
+		},
+	}, {
+		Wrap(New("ooh"), "ahh"), []fileline{
+			{"github.com/pkg/errors/errors_test.go", 204}, // this is the stack of Wrap, not New
+		},
+	}, {
+		Cause(Wrap(New("ooh"), "ahh")), []fileline{
+			{"github.com/pkg/errors/errors_test.go", 208}, // this is the stack of New
+		},
+	}}
+	for _, tt := range tests {
+		x, ok := tt.err.(interface {
+			Stack() []uintptr
+		})
+		if !ok {
+			t.Errorf("expected %#v to implement Stack()", tt.err)
+			continue
+		}
+		st := x.Stack()
+		for i, want := range tt.want {
+			file, line := location(st[i] - 1)
+			if file != want.file || line != want.line {
+				t.Errorf("frame %d: expected %s:%d, got %s:%d", i, want.file, want.line, file, line)
+			}
+		}
+	}
+}

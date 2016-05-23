@@ -21,8 +21,14 @@
 //              return errors.Wrap(err, "read failed")
 //      }
 //
-// In addition, errors.Wrap records the file and line where it was called,
-// allowing the programmer to retrieve the path to the original error.
+// Retrieving the stack trace of an error or wrapper
+//
+// New, Errorf, Wrap, and Wrapf record a stack trace at the point they are
+// invoked. This information can be retrieved with the following interface.
+//
+//     type Stack interface {
+//             Stack() []uintptr
+//     }
 //
 // Retrieving the cause of an error
 //
@@ -31,8 +37,8 @@
 // to reverse the operation of errors.Wrap to retrieve the original error
 // for inspection. Any error value which implements this interface
 //
-//     type causer interface {
-//          Cause() error
+//     type Causer interface {
+//             Cause() error
 //     }
 //
 // can be inspected by errors.Cause. errors.Cause will recursively retrieve
@@ -57,6 +63,8 @@ import (
 
 // stack represents a stack of programm counters.
 type stack []uintptr
+
+func (s stack) Stack() []uintptr { return s }
 
 func (s stack) Location() (string, int) {
 	return location(s[0] - 1)
@@ -191,7 +199,7 @@ func Fprint(w io.Writer, err error) {
 }
 
 func callers() stack {
-	const depth = 1
+	const depth = 32
 	var pcs [depth]uintptr
 	n := runtime.Callers(3, pcs[:])
 	return pcs[0:n]
