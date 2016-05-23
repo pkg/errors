@@ -208,6 +208,21 @@ func TestStack(t *testing.T) {
 		Cause(Wrap(New("ooh"), "ahh")), []fileline{
 			{"github.com/pkg/errors/errors_test.go", 208}, // this is the stack of New
 		},
+	}, {
+		func() error { return New("ooh") }(), []fileline{
+			{"github.com/pkg/errors/errors_test.go", 212}, // this is the stack of New
+			{"github.com/pkg/errors/errors_test.go", 212}, // this is the stack of New's caller
+		},
+	}, {
+		Cause(func() error {
+			return func() error {
+				return Errorf("hello %s", fmt.Sprintf("world"))
+			}()
+		}()), []fileline{
+			{"github.com/pkg/errors/errors_test.go", 219}, // this is the stack of Errorf
+			{"github.com/pkg/errors/errors_test.go", 220}, // this is the stack of Errorf's caller
+			{"github.com/pkg/errors/errors_test.go", 221}, // this is the stack of Errorf's caller's caller
+		},
 	}}
 	for _, tt := range tests {
 		x, ok := tt.err.(interface {
