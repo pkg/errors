@@ -55,11 +55,11 @@ import (
 	"strings"
 )
 
-// location represents a stack of programm counters.
-type location []uintptr
+// stack represents a stack of programm counters.
+type stack []uintptr
 
-func (l location) Location() (string, int) {
-	pc := l[0] - 1
+func (s stack) Location() (string, int) {
+	pc := s[0] - 1
 	fn := runtime.FuncForPC(pc)
 	if fn == nil {
 		return "unknown", 0
@@ -111,10 +111,10 @@ func (l location) Location() (string, int) {
 func New(text string) error {
 	return struct {
 		error
-		location
+		stack
 	}{
 		errors.New(text),
-		caller(),
+		callers(),
 	}
 }
 
@@ -132,10 +132,10 @@ func (c cause) Message() string { return c.message }
 func Errorf(format string, args ...interface{}) error {
 	return struct {
 		error
-		location
+		stack
 	}{
 		fmt.Errorf(format, args...),
-		caller(),
+		callers(),
 	}
 }
 
@@ -145,7 +145,7 @@ func Wrap(cause error, message string) error {
 	if cause == nil {
 		return nil
 	}
-	return wrap(cause, message, caller())
+	return wrap(cause, message, callers())
 }
 
 // Wrapf returns an error annotating the cause with the format specifier.
@@ -154,19 +154,19 @@ func Wrapf(cause error, format string, args ...interface{}) error {
 	if cause == nil {
 		return nil
 	}
-	return wrap(cause, fmt.Sprintf(format, args...), caller())
+	return wrap(cause, fmt.Sprintf(format, args...), callers())
 }
 
-func wrap(err error, msg string, loc location) error {
+func wrap(err error, msg string, st stack) error {
 	return struct {
 		cause
-		location
+		stack
 	}{
 		cause{
 			cause:   err,
 			message: msg,
 		},
-		loc,
+		st,
 	}
 }
 
@@ -235,8 +235,9 @@ func Fprint(w io.Writer, err error) {
 	}
 }
 
-func caller() location {
-	var pcs [1]uintptr
+func callers() stack {
+	const depth = 1
+	var pcs [depth]uintptr
 	n := runtime.Callers(3, pcs[:])
-	return location(pcs[0:n])
+	return pcs[0:n]
 }
