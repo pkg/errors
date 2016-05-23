@@ -55,12 +55,11 @@ import (
 	"strings"
 )
 
-// location represents a program counter that
-// implements the Location() method.
-type location uintptr
+// location represents a stack of programm counters.
+type location []uintptr
 
 func (l location) Location() (string, int) {
-	pc := uintptr(l) - 1
+	pc := l[0] - 1
 	fn := runtime.FuncForPC(pc)
 	if fn == nil {
 		return "unknown", 0
@@ -110,13 +109,12 @@ func (l location) Location() (string, int) {
 
 // New returns an error that formats as the given text.
 func New(text string) error {
-	pc, _, _, _ := runtime.Caller(1)
 	return struct {
 		error
 		location
 	}{
 		errors.New(text),
-		location(pc),
+		caller(),
 	}
 }
 
@@ -132,13 +130,12 @@ func (c cause) Message() string { return c.message }
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 func Errorf(format string, args ...interface{}) error {
-	pc, _, _, _ := runtime.Caller(1)
 	return struct {
 		error
 		location
 	}{
 		fmt.Errorf(format, args...),
-		location(pc),
+		caller(),
 	}
 }
 
@@ -148,8 +145,7 @@ func Wrap(cause error, message string) error {
 	if cause == nil {
 		return nil
 	}
-	pc, _, _, _ := runtime.Caller(1)
-	return wrap(cause, message, pc)
+	return wrap(cause, message, caller())
 }
 
 // Wrapf returns an error annotating the cause with the format specifier.
@@ -158,11 +154,10 @@ func Wrapf(cause error, format string, args ...interface{}) error {
 	if cause == nil {
 		return nil
 	}
-	pc, _, _, _ := runtime.Caller(1)
-	return wrap(cause, fmt.Sprintf(format, args...), pc)
+	return wrap(cause, fmt.Sprintf(format, args...), caller())
 }
 
-func wrap(err error, msg string, pc uintptr) error {
+func wrap(err error, msg string, loc location) error {
 	return struct {
 		cause
 		location
@@ -171,7 +166,7 @@ func wrap(err error, msg string, pc uintptr) error {
 			cause:   err,
 			message: msg,
 		},
-		location(pc),
+		loc,
 	}
 }
 
@@ -238,4 +233,10 @@ func Fprint(w io.Writer, err error) {
 		}
 		err = cause.Cause()
 	}
+}
+
+func caller() location {
+	var pcs [1]uintptr
+	n := runtime.Callers(3, pcs[:])
+	return location(pcs[0:n])
 }
