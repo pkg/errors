@@ -64,17 +64,17 @@ import (
 // stack represents a stack of programm counters.
 type stack []uintptr
 
-func (s stack) Stack() []uintptr { return s }
+func (s *stack) Stack() []uintptr { return *s }
 
-func (s stack) Location() (string, int) {
-	return location(s[0] - 1)
+func (s *stack) Location() (string, int) {
+	return location((*s)[0] - 1)
 }
 
 // New returns an error that formats as the given text.
 func New(text string) error {
 	return struct {
 		error
-		stack
+		*stack
 	}{
 		errors.New(text),
 		callers(),
@@ -95,7 +95,7 @@ func (c cause) Message() string { return c.message }
 func Errorf(format string, args ...interface{}) error {
 	return struct {
 		error
-		stack
+		*stack
 	}{
 		fmt.Errorf(format, args...),
 		callers(),
@@ -120,10 +120,10 @@ func Wrapf(cause error, format string, args ...interface{}) error {
 	return wrap(cause, fmt.Sprintf(format, args...), callers())
 }
 
-func wrap(err error, msg string, st stack) error {
+func wrap(err error, msg string, st *stack) error {
 	return struct {
 		cause
-		stack
+		*stack
 	}{
 		cause{
 			cause:   err,
@@ -198,11 +198,12 @@ func Fprint(w io.Writer, err error) {
 	}
 }
 
-func callers() stack {
+func callers() *stack {
 	const depth = 32
 	var pcs [depth]uintptr
 	n := runtime.Callers(3, pcs[:])
-	return pcs[0:n]
+	var st stack = pcs[0:n]
+	return &st
 }
 
 // location returns the source file and line matching pc.

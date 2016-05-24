@@ -241,3 +241,24 @@ func TestStack(t *testing.T) {
 		}
 	}
 }
+
+// errors.New, etc values are not expected to be compared by value
+// but the change in errors#27 made them incomparable. Assert that
+// various kinds of errors have a functional equality operator, even
+// if the result of that equality is always false.
+func TestErrorEquality(t *testing.T) {
+	tests := []struct {
+		err1, err2 error
+	}{
+		{io.EOF, io.EOF},
+		{io.EOF, nil},
+		{io.EOF, errors.New("EOF")},
+		{io.EOF, New("EOF")},
+		{New("EOF"), New("EOF")},
+		{New("EOF"), Errorf("EOF")},
+		{New("EOF"), Wrap(io.EOF, "EOF")},
+	}
+	for _, tt := range tests {
+		_ = tt.err1 == tt.err2 // mustn't panic
+	}
+}
