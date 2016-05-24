@@ -102,22 +102,22 @@ func Errorf(format string, args ...interface{}) error {
 	}
 }
 
-// Wrap returns an error annotating the cause with message.
-// If cause is nil, Wrap returns nil.
-func Wrap(cause error, message string) error {
-	if cause == nil {
+// Wrap returns an error annotating err with message.
+// If err is nil, Wrap returns nil.
+func Wrap(err error, message string) error {
+	if err == nil {
 		return nil
 	}
-	return wrap(cause, message, callers())
+	return wrap(err, message, callers())
 }
 
-// Wrapf returns an error annotating the cause with the format specifier.
-// If cause is nil, Wrapf returns nil.
-func Wrapf(cause error, format string, args ...interface{}) error {
-	if cause == nil {
+// Wrapf returns an error annotating err with the format specifier.
+// If err is nil, Wrapf returns nil.
+func Wrapf(err error, format string, args ...interface{}) error {
+	if err == nil {
 		return nil
 	}
-	return wrap(cause, fmt.Sprintf(format, args...), callers())
+	return wrap(err, fmt.Sprintf(format, args...), callers())
 }
 
 func wrap(err error, msg string, st *stack) error {
