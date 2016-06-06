@@ -61,7 +61,7 @@ import (
 	"strings"
 )
 
-// stack represents a stack of programm counters.
+// stack represents a stack of program counters.
 type stack []uintptr
 
 func (s *stack) Stack() []uintptr { return *s }
