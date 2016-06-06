@@ -69,3 +69,19 @@ func ExampleErrorf() {
 
 	// Output: github.com/pkg/errors/example_test.go:67: whoops: foo
 }
+
+func ExampleError_Stacktrace() {
+	type Stacktrace interface {
+		Stacktrace() []errors.Frame
+	}
+
+	err, ok := errors.Cause(fn()).(Stacktrace)
+	if !ok {
+		panic("oops, err does not implement Stacktrace")
+	}
+
+	st := err.Stacktrace()
+	fmt.Printf("%+v", st[0:2]) // top two framces
+
+	// Output: [github.com/pkg/errors/example_test.go:33 github.com/pkg/errors/example_test.go:78]
+}
