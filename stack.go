@@ -47,6 +47,7 @@ func (f Frame) line() int {
 // Format accepts flags that alter the printing of some verbs, as follows:
 //
 //    %+s   path of source file relative to the compile time GOPATH
+//    %+v   equivalent to %+s:%d
 func (f Frame) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -54,7 +55,12 @@ func (f Frame) Format(s fmt.State, verb rune) {
 		case s.Flag('+'):
 			pc := f.pc()
 			fn := runtime.FuncForPC(pc)
-			io.WriteString(s, trimGOPATH(fn, pc))
+			if fn == nil {
+				io.WriteString(s, "unknown")
+			} else {
+				file, _ := fn.FileLine(pc)
+				io.WriteString(s, trimGOPATH(fn.Name(), file))
+			}
 		default:
 			io.WriteString(s, path.Base(f.file()))
 		}
@@ -62,7 +68,9 @@ func (f Frame) Format(s fmt.State, verb rune) {
 		fmt.Fprintf(s, "%d", f.line())
 	case 'n':
 		name := runtime.FuncForPC(f.pc()).Name()
-		i := strings.LastIndex(name, ".")
+		i := strings.LastIndex(name, "/")
+		name = name[i+1:]
+		i = strings.Index(name, ".")
 		io.WriteString(s, name[i+1:])
 	case 'v':
 		f.Format(s, 's')
@@ -99,7 +107,7 @@ func callers() *stack {
 	return &st
 }
 
-func trimGOPATH(fn *runtime.Func, pc uintptr) string {
+func trimGOPATH(name, file string) string {
 	// Here we want to get the source file path relative to the compile time
 	// GOPATH. As of Go 1.6.x there is no direct way to know the compiled
 	// GOPATH at runtime, but we can infer the number of path segments in the
@@ -123,8 +131,7 @@ func trimGOPATH(fn *runtime.Func, pc uintptr) string {
 	// one character forward to preserve the initial path segment without a
 	// leading separator.
 	const sep = "/"
-	goal := strings.Count(fn.Name(), sep) + 2
-	file, _ := fn.FileLine(pc)
+	goal := strings.Count(name, sep) + 2
 	i := len(file)
 	for n := 0; n < goal; n++ {
 		i = strings.LastIndex(file[:i], sep)

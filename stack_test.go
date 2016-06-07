@@ -6,25 +6,25 @@ import (
 	"testing"
 )
 
-var line, _, _, _ = runtime.Caller(0)
+var initpc, _, _, _ = runtime.Caller(0)
 
 func TestFrameLine(t *testing.T) {
 	var tests = []struct {
 		Frame
 		want int
 	}{{
-		Frame(line),
+		Frame(initpc),
 		9,
 	}, {
 		func() Frame {
-			var line, _, _, _ = runtime.Caller(0)
-			return Frame(line)
+			var pc, _, _, _ = runtime.Caller(0)
+			return Frame(pc)
 		}(),
 		20,
 	}, {
 		func() Frame {
-			var line, _, _, _ = runtime.Caller(1)
-			return Frame(line)
+			var pc, _, _, _ = runtime.Caller(1)
+			return Frame(pc)
 		}(),
 		28,
 	}, {
@@ -55,17 +55,29 @@ func TestStackLocation(t *testing.T) {
 	}
 }
 
+type X struct{}
+
+func (x X) val() Frame {
+	var pc, _, _, _ = runtime.Caller(0)
+	return Frame(pc)
+}
+
+func (x *X) ptr() Frame {
+	var pc, _, _, _ = runtime.Caller(0)
+	return Frame(pc)
+}
+
 func TestFrameFormat(t *testing.T) {
 	var tests = []struct {
 		Frame
 		format string
 		want   string
 	}{{
-		Frame(line),
+		Frame(initpc),
 		"%s",
 		"stack_test.go",
 	}, {
-		Frame(line),
+		Frame(initpc),
 		"%+s",
 		"github.com/pkg/errors/stack_test.go",
 	}, {
@@ -73,7 +85,11 @@ func TestFrameFormat(t *testing.T) {
 		"%s",
 		"unknown",
 	}, {
-		Frame(line),
+		Frame(0),
+		"%+s",
+		"unknown",
+	}, {
+		Frame(initpc),
 		"%d",
 		"9",
 	}, {
@@ -81,17 +97,35 @@ func TestFrameFormat(t *testing.T) {
 		"%d",
 		"0",
 	}, {
-		Frame(line),
+		Frame(initpc),
 		"%n",
 		"init",
+	}, {
+		func() Frame {
+			var x X
+			return x.ptr()
+		}(),
+		"%n",
+		"(*X).ptr",
+	}, {
+		func() Frame {
+			var x X
+			return x.val()
+		}(),
+		"%n",
+		"X.val",
 	}, {
 		Frame(0),
 		"%n",
 		"",
 	}, {
-		Frame(line),
+		Frame(initpc),
 		"%v",
 		"stack_test.go:9",
+	}, {
+		Frame(initpc),
+		"%+v",
+		"github.com/pkg/errors/stack_test.go:9",
 	}, {
 		Frame(0),
 		"%v",
@@ -112,14 +146,15 @@ func TestTrimGOPATH(t *testing.T) {
 		Frame
 		want string
 	}{{
-		Frame(line),
+		Frame(initpc),
 		"github.com/pkg/errors/stack_test.go",
 	}}
 
 	for _, tt := range tests {
 		pc := tt.Frame.pc()
 		fn := runtime.FuncForPC(pc)
-		got := trimGOPATH(fn, pc)
+		file, _ := fn.FileLine(pc)
+		got := trimGOPATH(fn.Name(), file)
 		want := tt.want
 		if want != got {
 			t.Errorf("%v: want %q, got %q", tt.Frame, want, got)
