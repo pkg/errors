@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Frame repesents an activation record.
+// Frame represents an activation record.
 type Frame uintptr
 
 // pc returns the program counter for this frame;
