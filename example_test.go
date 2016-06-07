@@ -70,7 +70,7 @@ func ExampleErrorf() {
 	// Output: github.com/pkg/errors/example_test.go:67: whoops: foo
 }
 
-func ExampleError_Stacktrace() {
+func Example_stacktrace() {
 	type Stacktrace interface {
 		Stacktrace() []errors.Frame
 	}
