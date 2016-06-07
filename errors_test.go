@@ -102,7 +102,7 @@ func TestCause(t *testing.T) {
 	}
 }
 
-func TestFprint(t *testing.T) {
+func TestFprintError(t *testing.T) {
 	x := New("error")
 	tests := []struct {
 		err  error
@@ -234,7 +234,8 @@ func TestStack(t *testing.T) {
 		}
 		st := x.Stack()
 		for i, want := range tt.want {
-			file, line := location(st[i] - 1)
+			frame := Frame(st[i])
+			file, line := fmt.Sprintf("%+s", frame), frame.line()
 			if file != want.file || line != want.line {
 				t.Errorf("frame %d: expected %s:%d, got %s:%d", i, want.file, want.line, file, line)
 			}
