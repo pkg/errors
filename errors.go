@@ -54,7 +54,6 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
 	"io"
 )
@@ -62,9 +61,11 @@ import (
 // _error is an error implementation returned by New and Errorf
 // that implements its own fmt.Formatter.
 type _error struct {
-	error
+	msg string
 	*stack
 }
+
+func (e _error) Error() string { return e.msg }
 
 func (e _error) Format(s fmt.State, verb rune) {
 	switch verb {
@@ -74,14 +75,14 @@ func (e _error) Format(s fmt.State, verb rune) {
 		}
 		fallthrough
 	case 's':
-		io.WriteString(s, e.Error())
+		io.WriteString(s, e.msg)
 	}
 }
 
 // New returns an error that formats as the given text.
 func New(text string) error {
 	return _error{
-		errors.New(text),
+		text,
 		callers(),
 	}
 }
@@ -90,7 +91,7 @@ func New(text string) error {
 // as a value that satisfies error.
 func Errorf(format string, args ...interface{}) error {
 	return _error{
-		fmt.Errorf(format, args...),
+		fmt.Sprintf(format, args...),
 		callers(),
 	}
 }
