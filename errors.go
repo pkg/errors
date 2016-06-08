@@ -83,13 +83,25 @@ func Errorf(format string, args ...interface{}) error {
 }
 
 type cause struct {
-	cause   error
-	message string
+	cause error
+	msg   string
 }
 
-func (c cause) Error() string   { return c.Message() + ": " + c.Cause().Error() }
-func (c cause) Cause() error    { return c.cause }
-func (c cause) Message() string { return c.message }
+func (c cause) Error() string { return fmt.Sprintf("%v", c) }
+func (c cause) Cause() error  { return c.cause }
+
+func (c cause) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			io.WriteString(s, c.msg)
+			return
+		}
+		fallthrough
+	case 's':
+		fmt.Fprintf(s, "%s: %v", c.msg, c.Cause())
+	}
+}
 
 // Wrap returns an error annotating err with message.
 // If err is nil, Wrap returns nil.
@@ -102,8 +114,8 @@ func Wrap(err error, message string) error {
 		*stack
 	}{
 		cause{
-			cause:   err,
-			message: message,
+			cause: err,
+			msg:   message,
 		},
 		callers(),
 	}
@@ -120,8 +132,8 @@ func Wrapf(err error, format string, args ...interface{}) error {
 		*stack
 	}{
 		cause{
-			cause:   err,
-			message: fmt.Sprintf(format, args...),
+			cause: err,
+			msg:   fmt.Sprintf(format, args...),
 		},
 		callers(),
 	}
@@ -170,9 +182,6 @@ func Fprint(w io.Writer, err error) {
 	type stacktrace interface {
 		Stacktrace() []Frame
 	}
-	type message interface {
-		Message() string
-	}
 
 	for err != nil {
 		switch err := err.(type) {
@@ -182,12 +191,7 @@ func Fprint(w io.Writer, err error) {
 		default:
 			// de nada
 		}
-		switch err := err.(type) {
-		case message:
-			fmt.Fprintln(w, err.Message())
-		default:
-			fmt.Fprintln(w, err.Error())
-		}
+		fmt.Fprintf(w, "%+v\n", err)
 
 		cause, ok := err.(causer)
 		if !ok {
