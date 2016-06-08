@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Frame represents an activation record.
+// Frame represents a program counter inside a stack frame.
 type Frame uintptr
 
 // pc returns the program counter for this frame;
@@ -68,10 +68,7 @@ func (f Frame) Format(s fmt.State, verb rune) {
 		fmt.Fprintf(s, "%d", f.line())
 	case 'n':
 		name := runtime.FuncForPC(f.pc()).Name()
-		i := strings.LastIndex(name, "/")
-		name = name[i+1:]
-		i = strings.Index(name, ".")
-		io.WriteString(s, name[i+1:])
+		io.WriteString(s, funcname(name))
 	case 'v':
 		f.Format(s, 's')
 		io.WriteString(s, ":")
@@ -105,6 +102,14 @@ func callers() *stack {
 	n := runtime.Callers(3, pcs[:])
 	var st stack = pcs[0:n]
 	return &st
+}
+
+// funcname removes the path prefix component of a function's name reported by func.Name().
+func funcname(name string) string {
+	i := strings.LastIndex(name, "/")
+	name = name[i+1:]
+	i = strings.Index(name, ".")
+	return name[i+1:]
 }
 
 func trimGOPATH(name, file string) string {
