@@ -100,21 +100,8 @@ type cause struct {
 	msg   string
 }
 
-func (c cause) Error() string { return fmt.Sprintf("%v", c) }
+func (c cause) Error() string { return fmt.Sprintf("%s: %v", c.msg, c.Cause()) }
 func (c cause) Cause() error  { return c.cause }
-
-func (c cause) Format(s fmt.State, verb rune) {
-	switch verb {
-	case 'v':
-		if s.Flag('+') {
-			io.WriteString(s, c.msg)
-			return
-		}
-		fallthrough
-	case 's':
-		fmt.Fprintf(s, "%s: %v", c.msg, c.Cause())
-	}
-}
 
 // wrapper is an error implementation returned by Wrap and Wrapf
 // that implements its own fmt.Formatter.
@@ -127,7 +114,7 @@ func (w wrapper) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			fmt.Fprintf(s, "%+v: %+v", w.Stacktrace()[0], w.cause)
+			fmt.Fprintf(s, "%+v: %s", w.Stacktrace()[0], w.cause.msg)
 			return
 		}
 		fallthrough
