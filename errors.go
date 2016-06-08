@@ -162,18 +162,11 @@ func Cause(err error) error {
 //            Stacktrace() []Frame
 //     }
 //
-//     type Location interface {
-//            Location() (file string, line int)
-//     }
-//
 // Print will also print the file and line of the error.
 // If err is nil, nothing is printed.
 //
 // Deprecated: Fprint will be removed in version 0.7.
 func Fprint(w io.Writer, err error) {
-	type location interface {
-		Location() (string, int)
-	}
 	type stacktrace interface {
 		Stacktrace() []Frame
 	}
@@ -185,10 +178,7 @@ func Fprint(w io.Writer, err error) {
 		switch err := err.(type) {
 		case stacktrace:
 			frame := err.Stacktrace()[0]
-			fmt.Fprintf(w, "%+s:%d: ", frame, frame)
-		case location:
-			file, line := err.Location()
-			fmt.Fprintf(w, "%s:%d: ", file, line)
+			fmt.Fprintf(w, "%+v: ", frame)
 		default:
 			// de nada
 		}

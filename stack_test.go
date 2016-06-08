@@ -41,20 +41,6 @@ func TestFrameLine(t *testing.T) {
 	}
 }
 
-func TestStackLocation(t *testing.T) {
-	st := func() *stack {
-		var pcs [32]uintptr
-		n := runtime.Callers(1, pcs[:])
-		var st stack = pcs[0:n]
-		return &st
-	}()
-	file, line := st.Location()
-	wfile, wline := "github.com/pkg/errors/stack_test.go", 47
-	if file != wfile || line != wline {
-		t.Errorf("stack.Location(): want %q %d, got %q %d", wfile, wline, file, line)
-	}
-}
-
 type X struct{}
 
 func (x X) val() Frame {

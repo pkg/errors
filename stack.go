@@ -82,12 +82,6 @@ type stack []uintptr
 // Deprecated: use Stacktrace()
 func (s *stack) Stack() []uintptr { return *s }
 
-// Deprecated: use Stacktrace()[0]
-func (s *stack) Location() (string, int) {
-	frame := s.Stacktrace()[0]
-	return fmt.Sprintf("%+s", frame), frame.line()
-}
-
 func (s *stack) Stacktrace() []Frame {
 	f := make([]Frame, len(*s))
 	for i := 0; i < len(f); i++ {
