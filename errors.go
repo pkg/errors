@@ -70,15 +70,6 @@ func New(text string) error {
 	}
 }
 
-type cause struct {
-	cause   error
-	message string
-}
-
-func (c cause) Error() string   { return c.Message() + ": " + c.Cause().Error() }
-func (c cause) Cause() error    { return c.cause }
-func (c cause) Message() string { return c.message }
-
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 func Errorf(format string, args ...interface{}) error {
@@ -90,6 +81,15 @@ func Errorf(format string, args ...interface{}) error {
 		callers(),
 	}
 }
+
+type cause struct {
+	cause   error
+	message string
+}
+
+func (c cause) Error() string   { return c.Message() + ": " + c.Cause().Error() }
+func (c cause) Cause() error    { return c.cause }
+func (c cause) Message() string { return c.message }
 
 // Wrap returns an error annotating err with message.
 // If err is nil, Wrap returns nil.
