@@ -65,4 +65,4 @@ Before proposing a change, please discuss your change by raising an issue.
 
 ## Licence
 
-MIT
+BSD-2-Clause
