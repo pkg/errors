@@ -235,15 +235,15 @@ func TestStack(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		x, ok := tt.err.(interface {
-			Stack() []uintptr
+			Stacktrace() []Frame
 		})
 		if !ok {
 			t.Errorf("expected %#v to implement Stack()", tt.err)
 			continue
 		}
-		st := x.Stack()
+		st := x.Stacktrace()
 		for i, want := range tt.want {
-			frame := Frame(st[i])
+			frame := st[i]
 			file, line := fmt.Sprintf("%+s", frame), frame.line()
 			if file != want.file || line != want.line {
 				t.Errorf("frame %d: expected %s:%d, got %s:%d", i, want.file, want.line, file, line)

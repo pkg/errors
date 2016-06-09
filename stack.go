@@ -79,9 +79,6 @@ func (f Frame) Format(s fmt.State, verb rune) {
 // stack represents a stack of program counters.
 type stack []uintptr
 
-// Deprecated: use Stacktrace()
-func (s *stack) Stack() []uintptr { return *s }
-
 func (s *stack) Stacktrace() []Frame {
 	f := make([]Frame, len(*s))
 	for i := 0; i < len(f); i++ {
