@@ -54,18 +54,35 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
 	"io"
 )
 
+// _error is an error implementation returned by New and Errorf
+// that implements its own fmt.Formatter.
+type _error struct {
+	msg string
+	*stack
+}
+
+func (e _error) Error() string { return e.msg }
+
+func (e _error) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			fmt.Fprintf(s, "%+v: ", e.Stacktrace()[0])
+		}
+		fallthrough
+	case 's':
+		io.WriteString(s, e.msg)
+	}
+}
+
 // New returns an error that formats as the given text.
 func New(text string) error {
-	return struct {
-		error
-		*stack
-	}{
-		errors.New(text),
+	return _error{
+		text,
 		callers(),
 	}
 }
@@ -73,11 +90,8 @@ func New(text string) error {
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 func Errorf(format string, args ...interface{}) error {
-	return struct {
-		error
-		*stack
-	}{
-		fmt.Errorf(format, args...),
+	return _error{
+		fmt.Sprintf(format, args...),
 		callers(),
 	}
 }
@@ -87,19 +101,26 @@ type cause struct {
 	msg   string
 }
 
-func (c cause) Error() string { return fmt.Sprintf("%v", c) }
+func (c cause) Error() string { return fmt.Sprintf("%s: %v", c.msg, c.Cause()) }
 func (c cause) Cause() error  { return c.cause }
 
-func (c cause) Format(s fmt.State, verb rune) {
+// wrapper is an error implementation returned by Wrap and Wrapf
+// that implements its own fmt.Formatter.
+type wrapper struct {
+	cause
+	*stack
+}
+
+func (w wrapper) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			io.WriteString(s, c.msg)
+			fmt.Fprintf(s, "%+v: %s", w.Stacktrace()[0], w.cause.msg)
 			return
 		}
 		fallthrough
 	case 's':
-		fmt.Fprintf(s, "%s: %v", c.msg, c.Cause())
+		io.WriteString(s, w.Error())
 	}
 }
 
@@ -109,15 +130,12 @@ func Wrap(err error, message string) error {
 	if err == nil {
 		return nil
 	}
-	return struct {
-		cause
-		*stack
-	}{
-		cause{
+	return wrapper{
+		cause: cause{
 			cause: err,
 			msg:   message,
 		},
-		callers(),
+		stack: callers(),
 	}
 }
 
@@ -127,15 +145,12 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
 	}
-	return struct {
-		cause
-		*stack
-	}{
-		cause{
+	return wrapper{
+		cause: cause{
 			cause: err,
 			msg:   fmt.Sprintf(format, args...),
 		},
-		callers(),
+		stack: callers(),
 	}
 }
 
@@ -179,20 +194,8 @@ func Cause(err error) error {
 //
 // Deprecated: Fprint will be removed in version 0.7.
 func Fprint(w io.Writer, err error) {
-	type stacktrace interface {
-		Stacktrace() []Frame
-	}
-
 	for err != nil {
-		switch err := err.(type) {
-		case stacktrace:
-			frame := err.Stacktrace()[0]
-			fmt.Fprintf(w, "%+v: ", frame)
-		default:
-			// de nada
-		}
 		fmt.Fprintf(w, "%+v\n", err)
-
 		cause, ok := err.(causer)
 		if !ok {
 			break

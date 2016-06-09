@@ -14,9 +14,9 @@ func ExampleNew() {
 	// Output: whoops
 }
 
-func ExampleNew_fprint() {
+func ExampleNew_printf() {
 	err := errors.New("whoops")
-	errors.Fprint(os.Stdout, err)
+	fmt.Printf("%+v", err)
 
 	// Output: github.com/pkg/errors/example_test.go:18: whoops
 }
@@ -65,7 +65,7 @@ func ExampleWrapf() {
 
 func ExampleErrorf() {
 	err := errors.Errorf("whoops: %s", "foo")
-	errors.Fprint(os.Stdout, err)
+	fmt.Printf("%+v", err)
 
 	// Output: github.com/pkg/errors/example_test.go:67: whoops: foo
 }
