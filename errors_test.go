@@ -197,61 +197,6 @@ func TestErrorf(t *testing.T) {
 	}
 }
 
-func TestStack(t *testing.T) {
-	type fileline struct {
-		file string
-		line int
-	}
-	tests := []struct {
-		err  error
-		want []fileline
-	}{{
-		New("ooh"), []fileline{
-			{"github.com/pkg/errors/errors_test.go", 209},
-		},
-	}, {
-		Wrap(New("ooh"), "ahh"), []fileline{
-			{"github.com/pkg/errors/errors_test.go", 213}, // this is the stack of Wrap, not New
-		},
-	}, {
-		Cause(Wrap(New("ooh"), "ahh")), []fileline{
-			{"github.com/pkg/errors/errors_test.go", 217}, // this is the stack of New
-		},
-	}, {
-		func() error { return New("ooh") }(), []fileline{
-			{"github.com/pkg/errors/errors_test.go", 221}, // this is the stack of New
-			{"github.com/pkg/errors/errors_test.go", 221}, // this is the stack of New's caller
-		},
-	}, {
-		Cause(func() error {
-			return func() error {
-				return Errorf("hello %s", fmt.Sprintf("world"))
-			}()
-		}()), []fileline{
-			{"github.com/pkg/errors/errors_test.go", 228}, // this is the stack of Errorf
-			{"github.com/pkg/errors/errors_test.go", 229}, // this is the stack of Errorf's caller
-			{"github.com/pkg/errors/errors_test.go", 230}, // this is the stack of Errorf's caller's caller
-		},
-	}}
-	for _, tt := range tests {
-		x, ok := tt.err.(interface {
-			Stacktrace() []Frame
-		})
-		if !ok {
-			t.Errorf("expected %#v to implement Stack()", tt.err)
-			continue
-		}
-		st := x.Stacktrace()
-		for i, want := range tt.want {
-			frame := st[i]
-			file, line := fmt.Sprintf("%+s", frame), frame.line()
-			if file != want.file || line != want.line {
-				t.Errorf("frame %d: expected %s:%d, got %s:%d", i, want.file, want.line, file, line)
-			}
-		}
-	}
-}
-
 // errors.New, etc values are not expected to be compared by value
 // but the change in errors#27 made them incomparable. Assert that
 // various kinds of errors have a functional equality operator, even
