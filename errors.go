@@ -115,7 +115,8 @@ func (w wrapper) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			fmt.Fprintf(s, "%+v: %s", w.Stacktrace()[0], w.cause.msg)
+			fmt.Fprintf(s, "%+v\n", w.Cause())
+			fmt.Fprintf(s, "%+v: %s", w.Stacktrace()[0], w.msg)
 			return
 		}
 		fallthrough
@@ -154,10 +155,6 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	}
 }
 
-type causer interface {
-	Cause() error
-}
-
 // Cause returns the underlying cause of the error, if possible.
 // An error value has a cause if it implements the following
 // interface:
@@ -170,6 +167,10 @@ type causer interface {
 // be returned. If the error is nil, nil will be returned without further
 // investigation.
 func Cause(err error) error {
+	type causer interface {
+		Cause() error
+	}
+
 	for err != nil {
 		cause, ok := err.(causer)
 		if !ok {
@@ -188,15 +189,8 @@ func Cause(err error) error {
 //
 // Deprecated: Fprint will be removed in version 0.7.
 func Fprint(w io.Writer, err error) {
-	var fn func(err error)
-	fn = func(err error) {
-		if err == nil {
-			return
-		}
-		if cause, ok := err.(causer); ok {
-			fn(cause.Cause())
-		}
-		fmt.Fprintf(w, "%+v\n", err)
+	if err == nil {
+		return
 	}
-	fn(err)
+	fmt.Fprintf(w, "%+v\n", err)
 }

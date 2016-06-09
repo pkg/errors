@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"io"
 	"testing"
 )
 
@@ -22,7 +23,7 @@ func TestFormat(t *testing.T) {
 	}, {
 		New("error"),
 		"%+v",
-		"github.com/pkg/errors/format_test.go:23: error",
+		"github.com/pkg/errors/format_test.go:24: error",
 	}, {
 		Errorf("%s", "error"),
 		"%s",
@@ -34,7 +35,7 @@ func TestFormat(t *testing.T) {
 	}, {
 		Errorf("%s", "error"),
 		"%+v",
-		"github.com/pkg/errors/format_test.go:35: error",
+		"github.com/pkg/errors/format_test.go:36: error",
 	}, {
 		Wrap(New("error"), "error2"),
 		"%s",
@@ -46,11 +47,25 @@ func TestFormat(t *testing.T) {
 	}, {
 		Wrap(New("error"), "error2"),
 		"%+v",
-		"github.com/pkg/errors/format_test.go:47: error2",
+		"github.com/pkg/errors/format_test.go:48: error\n" +
+			"github.com/pkg/errors/format_test.go:48: error2",
+	}, {
+		Wrap(io.EOF, "error"),
+		"%s",
+		"error: EOF",
 	}, {
 		Wrapf(New("error"), "error%d", 2),
 		"%s",
 		"error2: error",
+	}, {
+		Wrap(io.EOF, "error"),
+		"%v",
+		"error: EOF",
+	}, {
+		Wrap(io.EOF, "error"),
+		"%+v",
+		"EOF\n" +
+			"github.com/pkg/errors/format_test.go:65: error",
 	}, {
 		Wrapf(New("error"), "error%d", 2),
 		"%v",
@@ -58,7 +73,8 @@ func TestFormat(t *testing.T) {
 	}, {
 		Wrapf(New("error"), "error%d", 2),
 		"%+v",
-		"github.com/pkg/errors/format_test.go:59: error2",
+		"github.com/pkg/errors/format_test.go:74: error\n" +
+			"github.com/pkg/errors/format_test.go:74: error2",
 	}}
 
 	for _, tt := range tests {
