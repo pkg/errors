@@ -180,17 +180,3 @@ func Cause(err error) error {
 	}
 	return err
 }
-
-// Fprint prints the error to the supplied writer.
-// If the error implements the Causer interface described in Cause
-// Fprint will recurse into the error's cause.
-// Fprint will also print the file and line of the error.
-// If err is nil, nothing is printed.
-//
-// Deprecated: Fprint will be removed in version 0.7.
-func Fprint(w io.Writer, err error) {
-	if err == nil {
-		return
-	}
-	fmt.Fprintf(w, "%+v\n", err)
-}
