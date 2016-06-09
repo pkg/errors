@@ -49,10 +49,10 @@ func ExampleFprint() {
 	err := fn()
 	errors.Fprint(os.Stdout, err)
 
-	// Output: github.com/pkg/errors/example_test.go:36: outer
-	// github.com/pkg/errors/example_test.go:35: middle
+	// Output: github.com/pkg/errors/example_test.go:33: error
 	// github.com/pkg/errors/example_test.go:34: inner
-	// github.com/pkg/errors/example_test.go:33: error
+	// github.com/pkg/errors/example_test.go:35: middle
+	// github.com/pkg/errors/example_test.go:36: outer
 }
 
 func ExampleWrapf() {

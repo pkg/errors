@@ -182,24 +182,21 @@ func Cause(err error) error {
 
 // Fprint prints the error to the supplied writer.
 // If the error implements the Causer interface described in Cause
-// Print will recurse into the error's cause.
-// If the error implements one of the following interfaces:
-//
-//     type Stacktrace interface {
-//            Stacktrace() []Frame
-//     }
-//
-// Print will also print the file and line of the error.
+// Fprint will recurse into the error's cause.
+// Fprint will also print the file and line of the error.
 // If err is nil, nothing is printed.
 //
 // Deprecated: Fprint will be removed in version 0.7.
 func Fprint(w io.Writer, err error) {
-	for err != nil {
-		fmt.Fprintf(w, "%+v\n", err)
-		cause, ok := err.(causer)
-		if !ok {
-			break
+	var fn func(err error)
+	fn = func(err error) {
+		if err == nil {
+			return
 		}
-		err = cause.Cause()
+		if cause, ok := err.(causer); ok {
+			fn(cause.Cause())
+		}
+		fmt.Fprintf(w, "%+v\n", err)
 	}
+	fn(err)
 }
