@@ -250,6 +250,10 @@ func TestStacktraceFormat(t *testing.T) {
 		"%+v",
 		"[]",
 	}, {
+		nil,
+		"%#v",
+		"[]errors.Frame(nil)",
+	}, {
 		make(Stacktrace, 0),
 		"%s",
 		"[]",
@@ -261,6 +265,10 @@ func TestStacktraceFormat(t *testing.T) {
 		make(Stacktrace, 0),
 		"%+v",
 		"[]",
+	}, {
+		make(Stacktrace, 0),
+		"%#v",
+		"[]errors.Frame{}",
 	}, {
 		stacktrace()[:2],
 		"%s",
@@ -268,11 +276,15 @@ func TestStacktraceFormat(t *testing.T) {
 	}, {
 		stacktrace()[:2],
 		"%v",
-		"[stack_test.go:230 stack_test.go:269]",
+		"[stack_test.go:230 stack_test.go:277]",
 	}, {
 		stacktrace()[:2],
 		"%+v",
-		"[github.com/pkg/errors/stack_test.go:230 github.com/pkg/errors/stack_test.go:273]",
+		"[github.com/pkg/errors/stack_test.go:230 github.com/pkg/errors/stack_test.go:281]",
+	}, {
+		stacktrace()[:2],
+		"%#v",
+		"[]errors.Frame{stack_test.go:230, stack_test.go:285}",
 	}}
 
 	for i, tt := range tests {

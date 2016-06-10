@@ -85,6 +85,8 @@ func (st Stacktrace) Format(s fmt.State, verb rune) {
 		switch {
 		case s.Flag('+'):
 			fmt.Fprintf(s, "%+v", []Frame(st))
+		case s.Flag('#'):
+			fmt.Fprintf(s, "%#v", []Frame(st))
 		default:
 			fmt.Fprintf(s, "%v", []Frame(st))
 		}
