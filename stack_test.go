@@ -170,42 +170,38 @@ func TestTrimGOPATH(t *testing.T) {
 }
 
 func TestStacktrace(t *testing.T) {
-	type fileline struct {
-		file string
-		line int
-	}
 	tests := []struct {
 		err  error
-		want []fileline
+		want []string
 	}{{
-		New("ooh"), []fileline{
-			{"github.com/pkg/errors/stack_test.go", 181},
+		New("ooh"), []string{
+			"github.com/pkg/errors/stack_test.go:177",
 		},
 	}, {
-		Wrap(New("ooh"), "ahh"), []fileline{
-			{"github.com/pkg/errors/stack_test.go", 185}, // this is the stack of Wrap, not New
+		Wrap(New("ooh"), "ahh"), []string{
+			"github.com/pkg/errors/stack_test.go:181", // this is the stack of Wrap, not New
 		},
 	}, {
-		Cause(Wrap(New("ooh"), "ahh")), []fileline{
-			{"github.com/pkg/errors/stack_test.go", 189}, // this is the stack of New
+		Cause(Wrap(New("ooh"), "ahh")), []string{
+			"github.com/pkg/errors/stack_test.go:185", // this is the stack of New
 		},
 	}, {
-		func() error { return New("ooh") }(), []fileline{
-			{"github.com/pkg/errors/stack_test.go", 193}, // this is the stack of New
-			{"github.com/pkg/errors/stack_test.go", 193}, // this is the stack of New's caller
+		func() error { return New("ooh") }(), []string{
+			"github.com/pkg/errors/stack_test.go:189", // this is the stack of New
+			"github.com/pkg/errors/stack_test.go:189", // this is the stack of New's caller
 		},
 	}, {
 		Cause(func() error {
 			return func() error {
 				return Errorf("hello %s", fmt.Sprintf("world"))
 			}()
-		}()), []fileline{
-			{"github.com/pkg/errors/stack_test.go", 200}, // this is the stack of Errorf
-			{"github.com/pkg/errors/stack_test.go", 201}, // this is the stack of Errorf's caller
-			{"github.com/pkg/errors/stack_test.go", 202}, // this is the stack of Errorf's caller's caller
+		}()), []string{
+			"github.com/pkg/errors/stack_test.go:196", // this is the stack of Errorf
+			"github.com/pkg/errors/stack_test.go:197", // this is the stack of Errorf's caller
+			"github.com/pkg/errors/stack_test.go:198", // this is the stack of Errorf's caller's caller
 		},
 	}}
-	for _, tt := range tests {
+	for i, tt := range tests {
 		x, ok := tt.err.(interface {
 			Stacktrace() Stacktrace
 		})
@@ -214,11 +210,11 @@ func TestStacktrace(t *testing.T) {
 			continue
 		}
 		st := x.Stacktrace()
-		for i, want := range tt.want {
-			frame := st[i]
-			file, line := fmt.Sprintf("%+s", frame), frame.line()
-			if file != want.file || line != want.line {
-				t.Errorf("frame %d: expected %s:%d, got %s:%d", i, want.file, want.line, file, line)
+		for j, want := range tt.want {
+			frame := st[j]
+			got := fmt.Sprintf("%+v", frame)
+			if got != want {
+				t.Errorf("test %d: frame %d: got %q, want %q", i, j, got, want)
 			}
 		}
 	}
@@ -276,15 +272,15 @@ func TestStacktraceFormat(t *testing.T) {
 	}, {
 		stacktrace()[:2],
 		"%v",
-		"[stack_test.go:230 stack_test.go:277]",
+		"[stack_test.go:226 stack_test.go:273]",
 	}, {
 		stacktrace()[:2],
 		"%+v",
-		"[github.com/pkg/errors/stack_test.go:230 github.com/pkg/errors/stack_test.go:281]",
+		"[github.com/pkg/errors/stack_test.go:226 github.com/pkg/errors/stack_test.go:277]",
 	}, {
 		stacktrace()[:2],
 		"%#v",
-		"[]errors.Frame{stack_test.go:230, stack_test.go:285}",
+		"[]errors.Frame{stack_test.go:226, stack_test.go:281}",
 	}}
 
 	for i, tt := range tests {
