@@ -71,7 +71,7 @@ func ExampleErrorf() {
 
 func Example_stacktrace() {
 	type Stacktrace interface {
-		Stacktrace() []errors.Frame
+		Stacktrace() errors.Stacktrace
 	}
 
 	err, ok := errors.Cause(fn()).(Stacktrace)

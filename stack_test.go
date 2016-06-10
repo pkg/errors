@@ -207,10 +207,10 @@ func TestStacktrace(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		x, ok := tt.err.(interface {
-			Stacktrace() []Frame
+			Stacktrace() Stacktrace
 		})
 		if !ok {
-			t.Errorf("expected %#v to implement Stacktrace() []Frame", tt.err)
+			t.Errorf("expected %#v to implement Stacktrace() Stacktrace", tt.err)
 			continue
 		}
 		st := x.Stacktrace()
@@ -220,6 +220,65 @@ func TestStacktrace(t *testing.T) {
 			if file != want.file || line != want.line {
 				t.Errorf("frame %d: expected %s:%d, got %s:%d", i, want.file, want.line, file, line)
 			}
+		}
+	}
+}
+
+func stacktrace() Stacktrace {
+	const depth = 8
+	var pcs [depth]uintptr
+	n := runtime.Callers(1, pcs[:])
+	var st stack = pcs[0:n]
+	return st.Stacktrace()
+}
+
+func TestStacktraceFormat(t *testing.T) {
+	tests := []struct {
+		Stacktrace
+		format string
+		want   string
+	}{{
+		nil,
+		"%s",
+		"[]",
+	}, {
+		nil,
+		"%v",
+		"[]",
+	}, {
+		nil,
+		"%+v",
+		"[]",
+	}, {
+		make(Stacktrace, 0),
+		"%s",
+		"[]",
+	}, {
+		make(Stacktrace, 0),
+		"%v",
+		"[]",
+	}, {
+		make(Stacktrace, 0),
+		"%+v",
+		"[]",
+	}, {
+		stacktrace()[:2],
+		"%s",
+		"[stack_test.go stack_test.go]",
+	}, {
+		stacktrace()[:2],
+		"%v",
+		"[stack_test.go:230 stack_test.go:269]",
+	}, {
+		stacktrace()[:2],
+		"%+v",
+		"[github.com/pkg/errors/stack_test.go:230 github.com/pkg/errors/stack_test.go:273]",
+	}}
+
+	for i, tt := range tests {
+		got := fmt.Sprintf(tt.format, tt.Stacktrace)
+		if got != tt.want {
+			t.Errorf("test %d: got: %q, want: %q", i+1, got, tt.want)
 		}
 	}
 }

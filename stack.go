@@ -76,10 +76,27 @@ func (f Frame) Format(s fmt.State, verb rune) {
 	}
 }
 
+// Stacktrace is stack of Frames from innermost (newest) to outermost (oldest).
+type Stacktrace []Frame
+
+func (st Stacktrace) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		switch {
+		case s.Flag('+'):
+			fmt.Fprintf(s, "%+v", []Frame(st))
+		default:
+			fmt.Fprintf(s, "%v", []Frame(st))
+		}
+	case 's':
+		fmt.Fprintf(s, "%s", []Frame(st))
+	}
+}
+
 // stack represents a stack of program counters.
 type stack []uintptr
 
-func (s *stack) Stacktrace() []Frame {
+func (s *stack) Stacktrace() Stacktrace {
 	f := make([]Frame, len(*s))
 	for i := 0; i < len(f); i++ {
 		f[i] = Frame((*s)[i])
