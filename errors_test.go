@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -91,57 +90,6 @@ func TestCause(t *testing.T) {
 		got := Cause(tt.err)
 		if !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
-		}
-	}
-}
-
-func TestFprintError(t *testing.T) {
-	x := New("error")
-	tests := []struct {
-		err  error
-		want string
-	}{{
-		// nil error is nil
-		err: nil,
-	}, {
-		// explicit nil error is nil
-		err: (error)(nil),
-	}, {
-		// uncaused error is unaffected
-		err:  io.EOF,
-		want: "EOF\n",
-	}, {
-		err: Wrap(io.EOF, "cause error"),
-		want: "EOF\n" +
-			"github.com/pkg/errors/errors_test.go:114: cause error\n",
-	}, {
-		err:  x, // return from errors.New
-		want: "github.com/pkg/errors/errors_test.go:99: error\n",
-	}, {
-		err: Wrap(x, "message"),
-		want: "github.com/pkg/errors/errors_test.go:99: error\n" +
-			"github.com/pkg/errors/errors_test.go:121: message\n",
-	}, {
-		err: Wrap(io.EOF, "message"),
-		want: "EOF\n" +
-			"github.com/pkg/errors/errors_test.go:125: message\n",
-	}, {
-		err: Wrap(Wrap(x, "message"), "another message"),
-		want: "github.com/pkg/errors/errors_test.go:99: error\n" +
-			"github.com/pkg/errors/errors_test.go:129: message\n" +
-			"github.com/pkg/errors/errors_test.go:129: another message\n",
-	}, {
-		err: Wrapf(x, "message"),
-		want: "github.com/pkg/errors/errors_test.go:99: error\n" +
-			"github.com/pkg/errors/errors_test.go:134: message\n",
-	}}
-
-	for i, tt := range tests {
-		var w bytes.Buffer
-		Fprint(&w, tt.err)
-		got := w.String()
-		if got != tt.want {
-			t.Errorf("test %d: Fprint(w, %q): got %q, want %q", i+1, tt.err, got, tt.want)
 		}
 	}
 }

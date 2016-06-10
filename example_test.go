@@ -2,7 +2,6 @@ package errors_test
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/pkg/errors"
 )
@@ -18,7 +17,7 @@ func ExampleNew_printf() {
 	err := errors.New("whoops")
 	fmt.Printf("%+v", err)
 
-	// Output: github.com/pkg/errors/example_test.go:18: whoops
+	// Output: github.com/pkg/errors/example_test.go:17: whoops
 }
 
 func ExampleWrap() {
@@ -45,14 +44,14 @@ func ExampleCause() {
 	// error
 }
 
-func ExampleFprint() {
+func ExampleCause_printf() {
 	err := fn()
-	errors.Fprint(os.Stdout, err)
+	fmt.Printf("%+v\n", err)
 
-	// Output: github.com/pkg/errors/example_test.go:33: error
-	// github.com/pkg/errors/example_test.go:34: inner
-	// github.com/pkg/errors/example_test.go:35: middle
-	// github.com/pkg/errors/example_test.go:36: outer
+	// Output: github.com/pkg/errors/example_test.go:32: error
+	// github.com/pkg/errors/example_test.go:33: inner
+	// github.com/pkg/errors/example_test.go:34: middle
+	// github.com/pkg/errors/example_test.go:35: outer
 }
 
 func ExampleWrapf() {
@@ -67,7 +66,7 @@ func ExampleErrorf() {
 	err := errors.Errorf("whoops: %s", "foo")
 	fmt.Printf("%+v", err)
 
-	// Output: github.com/pkg/errors/example_test.go:67: whoops: foo
+	// Output: github.com/pkg/errors/example_test.go:66: whoops: foo
 }
 
 func Example_stacktrace() {
@@ -83,5 +82,5 @@ func Example_stacktrace() {
 	st := err.Stacktrace()
 	fmt.Printf("%+v", st[0:2]) // top two frames
 
-	// Output: [github.com/pkg/errors/example_test.go:33 github.com/pkg/errors/example_test.go:78]
+	// Output: [github.com/pkg/errors/example_test.go:32 github.com/pkg/errors/example_test.go:77]
 }
