@@ -65,7 +65,8 @@ func TestFrameFormat(t *testing.T) {
 	}, {
 		Frame(initpc),
 		"%+s",
-		"github.com/pkg/errors/stack_test.go",
+		"github.com/pkg/errors.init\n" +
+			"\t/home/dfc/src/github.com/pkg/errors/stack_test.go",
 	}, {
 		Frame(0),
 		"%s",
@@ -111,7 +112,8 @@ func TestFrameFormat(t *testing.T) {
 	}, {
 		Frame(initpc),
 		"%+v",
-		"github.com/pkg/errors/stack_test.go:9",
+		"github.com/pkg/errors.init\n" +
+			"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:9",
 	}, {
 		Frame(0),
 		"%v",
@@ -175,20 +177,25 @@ func TestStacktrace(t *testing.T) {
 		want []string
 	}{{
 		New("ooh"), []string{
-			"github.com/pkg/errors/stack_test.go:177",
+			"github.com/pkg/errors.TestStacktrace\n" +
+				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:179",
 		},
 	}, {
 		Wrap(New("ooh"), "ahh"), []string{
-			"github.com/pkg/errors/stack_test.go:181", // this is the stack of Wrap, not New
+			"github.com/pkg/errors.TestStacktrace\n" +
+				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:184", // this is the stack of Wrap, not New
 		},
 	}, {
 		Cause(Wrap(New("ooh"), "ahh")), []string{
-			"github.com/pkg/errors/stack_test.go:185", // this is the stack of New
+			"github.com/pkg/errors.TestStacktrace\n" +
+				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:189", // this is the stack of New
 		},
 	}, {
 		func() error { return New("ooh") }(), []string{
-			"github.com/pkg/errors/stack_test.go:189", // this is the stack of New
-			"github.com/pkg/errors/stack_test.go:189", // this is the stack of New's caller
+			"github.com/pkg/errors.TestStacktrace.func1\n" +
+				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:194", // this is the stack of New
+			"github.com/pkg/errors.TestStacktrace\n" +
+				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:194", // this is the stack of New's caller
 		},
 	}, {
 		Cause(func() error {
@@ -196,9 +203,12 @@ func TestStacktrace(t *testing.T) {
 				return Errorf("hello %s", fmt.Sprintf("world"))
 			}()
 		}()), []string{
-			"github.com/pkg/errors/stack_test.go:196", // this is the stack of Errorf
-			"github.com/pkg/errors/stack_test.go:197", // this is the stack of Errorf's caller
-			"github.com/pkg/errors/stack_test.go:198", // this is the stack of Errorf's caller's caller
+			"github.com/pkg/errors.TestStacktrace.func2.1\n" +
+				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:203", // this is the stack of Errorf
+			"github.com/pkg/errors.TestStacktrace.func2\n" +
+				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:204", // this is the stack of Errorf's caller
+			"github.com/pkg/errors.TestStacktrace\n" +
+				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:205", // this is the stack of Errorf's caller's caller
 		},
 	}}
 	for i, tt := range tests {
@@ -244,7 +254,7 @@ func TestStacktraceFormat(t *testing.T) {
 	}, {
 		nil,
 		"%+v",
-		"[]",
+		"",
 	}, {
 		nil,
 		"%#v",
@@ -260,7 +270,7 @@ func TestStacktraceFormat(t *testing.T) {
 	}, {
 		make(Stacktrace, 0),
 		"%+v",
-		"[]",
+		"",
 	}, {
 		make(Stacktrace, 0),
 		"%#v",
@@ -272,15 +282,19 @@ func TestStacktraceFormat(t *testing.T) {
 	}, {
 		stacktrace()[:2],
 		"%v",
-		"[stack_test.go:226 stack_test.go:273]",
+		"[stack_test.go:236 stack_test.go:283]",
 	}, {
 		stacktrace()[:2],
 		"%+v",
-		"[github.com/pkg/errors/stack_test.go:226 github.com/pkg/errors/stack_test.go:277]",
+		"\n" +
+			"github.com/pkg/errors.stacktrace\n" +
+			"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:236\n" +
+			"github.com/pkg/errors.TestStacktraceFormat\n" +
+			"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:287",
 	}, {
 		stacktrace()[:2],
 		"%#v",
-		"[]errors.Frame{stack_test.go:226, stack_test.go:281}",
+		"[]errors.Frame{stack_test.go:236, stack_test.go:295}",
 	}}
 
 	for i, tt := range tests {
