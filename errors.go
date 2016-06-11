@@ -51,6 +51,18 @@
 //     type Stacktrace interface {
 //             Stacktrace() []Frame
 //     }
+//
+// The Frame type represents a call site in the stacktrace. Frame supports
+// the fmt.Formatter interface that can be used for printing information about
+// the stacktrace of this error. For example:
+//
+//     if err, ok := err.(Stacktrace); ok {
+//             for _, f := range err.Stacktrace() {
+//                     fmt.Printf("%+s:%d", f)
+//             }
+//     }
+//
+// See the documentation for Frame.Format for more details.
 package errors
 
 import (
