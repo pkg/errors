@@ -19,26 +19,6 @@ if err != nil {
         return errors.Wrap(err, "read failed")
 }
 ```
-## Retrieving the stack trace of an error or wrapper
-
-`New`, `Errorf`, `Wrap`, and `Wrapf` record a stack trace at the point they are invoked.
-This information can be retrieved with the following interface.
-```go
-type Stacktrace interface {
-        Stacktrace() []Frame
-}
-```
-The `Frame` type represents a call site in the stacktrace.
-`Frame` supports the `fmt.Formatter` interface that can be used for printing information about the stacktrace of this error. For example
-```go
-if err, ok := err.(Stacktrace); ok {
-	for _, f := range err.Stacktrace() {
-               fmt.Printf("%+s:%d", f)
-        }
-}
-```
-See [the documentation for `Frame.Format`](https://godoc.org/github.com/pkg/errors#Frame_Format) for more details.
-
 ## Retrieving the cause of an error
 
 Using `errors.Wrap` constructs a stack of errors, adding context to the preceding error. Depending on the nature of the error it may be necessary to reverse the operation of errors.Wrap to retrieve the original error for inspection. Any error value which implements this interface can be inspected by `errors.Cause`.
@@ -57,7 +37,7 @@ default:
 }
 ```
 
-Would you like to know more? Read the [blog post](http://dave.cheney.net/2016/04/27/dont-just-check-errors-handle-them-gracefully).
+[Read the package documentation for more information](https://godoc.org/github.com/pkg/errors).
 
 ## Contributing
 
