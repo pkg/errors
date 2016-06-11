@@ -49,8 +49,12 @@
 // invoked. This information can be retrieved with the following interface.
 //
 //     type Stacktrace interface {
-//             Stacktrace() []Frame
+//             Stacktrace() errors.Stacktrace
 //     }
+//
+// Where errors.Stacktrace is defined as
+//
+//     type Stacktrace []Frame
 //
 // The Frame type represents a call site in the stacktrace. Frame supports
 // the fmt.Formatter interface that can be used for printing information about
