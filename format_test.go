@@ -126,8 +126,8 @@ func TestFormatWrapf(t *testing.T) {
 	}
 }
 
-func testFormatRegexp(t *testing.T, err error, format, want string) {
-	got := fmt.Sprintf(format, err)
+func testFormatRegexp(t *testing.T, arg interface{}, format, want string) {
+	got := fmt.Sprintf(format, arg)
 	lines := strings.SplitN(got, "\n", -1)
 	for i, w := range strings.SplitN(want, "\n", -1) {
 		match, err := regexp.MatchString(w, lines[i])

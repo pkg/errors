@@ -66,7 +66,7 @@ func TestFrameFormat(t *testing.T) {
 		Frame(initpc),
 		"%+s",
 		"github.com/pkg/errors.init\n" +
-			"\t/home/dfc/src/github.com/pkg/errors/stack_test.go",
+			"\t/.+/github.com/pkg/errors/stack_test.go",
 	}, {
 		Frame(0),
 		"%s",
@@ -93,7 +93,7 @@ func TestFrameFormat(t *testing.T) {
 			return x.ptr()
 		}(),
 		"%n",
-		"(*X).ptr",
+		`\(\*X\).ptr`,
 	}, {
 		func() Frame {
 			var x X
@@ -113,7 +113,7 @@ func TestFrameFormat(t *testing.T) {
 		Frame(initpc),
 		"%+v",
 		"github.com/pkg/errors.init\n" +
-			"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:9",
+			"\t/.+/github.com/pkg/errors/stack_test.go:9",
 	}, {
 		Frame(0),
 		"%v",
@@ -121,11 +121,7 @@ func TestFrameFormat(t *testing.T) {
 	}}
 
 	for _, tt := range tests {
-		got := fmt.Sprintf(tt.format, tt.Frame)
-		want := tt.want
-		if want != got {
-			t.Errorf("%v %q: want: %q, got: %q", tt.Frame, tt.format, want, got)
-		}
+		testFormatRegexp(t, tt.Frame, tt.format, tt.want)
 	}
 }
 
@@ -178,24 +174,24 @@ func TestStacktrace(t *testing.T) {
 	}{{
 		New("ooh"), []string{
 			"github.com/pkg/errors.TestStacktrace\n" +
-				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:179",
+				"\t/.+/github.com/pkg/errors/stack_test.go:175",
 		},
 	}, {
 		Wrap(New("ooh"), "ahh"), []string{
 			"github.com/pkg/errors.TestStacktrace\n" +
-				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:184", // this is the stack of Wrap, not New
+				"\t/.+/github.com/pkg/errors/stack_test.go:180", // this is the stack of Wrap, not New
 		},
 	}, {
 		Cause(Wrap(New("ooh"), "ahh")), []string{
 			"github.com/pkg/errors.TestStacktrace\n" +
-				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:189", // this is the stack of New
+				"\t/.+/github.com/pkg/errors/stack_test.go:185", // this is the stack of New
 		},
 	}, {
 		func() error { return New("ooh") }(), []string{
 			"github.com/pkg/errors.TestStacktrace.func1\n" +
-				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:194", // this is the stack of New
+				"\t/.+/github.com/pkg/errors/stack_test.go:190", // this is the stack of New
 			"github.com/pkg/errors.TestStacktrace\n" +
-				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:194", // this is the stack of New's caller
+				"\t/.+/github.com/pkg/errors/stack_test.go:190", // this is the stack of New's caller
 		},
 	}, {
 		Cause(func() error {
@@ -204,14 +200,14 @@ func TestStacktrace(t *testing.T) {
 			}()
 		}()), []string{
 			"github.com/pkg/errors.TestStacktrace.func2.1\n" +
-				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:203", // this is the stack of Errorf
+				"\t/.+/github.com/pkg/errors/stack_test.go:199", // this is the stack of Errorf
 			"github.com/pkg/errors.TestStacktrace.func2\n" +
-				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:204", // this is the stack of Errorf's caller
+				"\t/.+/github.com/pkg/errors/stack_test.go:200", // this is the stack of Errorf's caller
 			"github.com/pkg/errors.TestStacktrace\n" +
-				"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:205", // this is the stack of Errorf's caller's caller
+				"\t/.+/github.com/pkg/errors/stack_test.go:201", // this is the stack of Errorf's caller's caller
 		},
 	}}
-	for i, tt := range tests {
+	for _, tt := range tests {
 		x, ok := tt.err.(interface {
 			Stacktrace() Stacktrace
 		})
@@ -221,11 +217,7 @@ func TestStacktrace(t *testing.T) {
 		}
 		st := x.Stacktrace()
 		for j, want := range tt.want {
-			frame := st[j]
-			got := fmt.Sprintf("%+v", frame)
-			if got != want {
-				t.Errorf("test %d: frame %d: got %q, want %q", i, j, got, want)
-			}
+			testFormatRegexp(t, st[j], "%+v", want)
 		}
 	}
 }
@@ -246,11 +238,11 @@ func TestStacktraceFormat(t *testing.T) {
 	}{{
 		nil,
 		"%s",
-		"[]",
+		`\[\]`,
 	}, {
 		nil,
 		"%v",
-		"[]",
+		`\[\]`,
 	}, {
 		nil,
 		"%+v",
@@ -258,15 +250,15 @@ func TestStacktraceFormat(t *testing.T) {
 	}, {
 		nil,
 		"%#v",
-		"[]errors.Frame(nil)",
+		`\[\]errors.Frame\(nil\)`,
 	}, {
 		make(Stacktrace, 0),
 		"%s",
-		"[]",
+		`\[\]`,
 	}, {
 		make(Stacktrace, 0),
 		"%v",
-		"[]",
+		`\[\]`,
 	}, {
 		make(Stacktrace, 0),
 		"%+v",
@@ -274,33 +266,30 @@ func TestStacktraceFormat(t *testing.T) {
 	}, {
 		make(Stacktrace, 0),
 		"%#v",
-		"[]errors.Frame{}",
+		`\[\]errors.Frame{}`,
 	}, {
 		stacktrace()[:2],
 		"%s",
-		"[stack_test.go stack_test.go]",
+		`\[stack_test.go stack_test.go\]`,
 	}, {
 		stacktrace()[:2],
 		"%v",
-		"[stack_test.go:236 stack_test.go:283]",
+		`\[stack_test.go:228 stack_test.go:275\]`,
 	}, {
 		stacktrace()[:2],
 		"%+v",
 		"\n" +
 			"github.com/pkg/errors.stacktrace\n" +
-			"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:236\n" +
+			"\t/.+/github.com/pkg/errors/stack_test.go:228\n" +
 			"github.com/pkg/errors.TestStacktraceFormat\n" +
-			"\t/home/dfc/src/github.com/pkg/errors/stack_test.go:287",
+			"\t/.+/github.com/pkg/errors/stack_test.go:279",
 	}, {
 		stacktrace()[:2],
 		"%#v",
-		"[]errors.Frame{stack_test.go:236, stack_test.go:295}",
+		`\[\]errors.Frame{stack_test.go:228, stack_test.go:287}`,
 	}}
 
-	for i, tt := range tests {
-		got := fmt.Sprintf(tt.format, tt.Stacktrace)
-		if got != tt.want {
-			t.Errorf("test %d: got: %q, want: %q", i+1, got, tt.want)
-		}
+	for _, tt := range tests {
+		testFormatRegexp(t, tt.Stacktrace, tt.format, tt.want)
 	}
 }
