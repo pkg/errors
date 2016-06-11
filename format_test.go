@@ -26,7 +26,7 @@ func TestFormatNew(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.TestFormatNew\n" +
-			"\t/.+/github.com/pkg/errors/format_test.go:25",
+			"\t.+/github.com/pkg/errors/format_test.go:25",
 	}}
 
 	for _, tt := range tests {
@@ -52,7 +52,7 @@ func TestFormatErrorf(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.TestFormatErrorf\n" +
-			"\t/.+/github.com/pkg/errors/format_test.go:51",
+			"\t.+/github.com/pkg/errors/format_test.go:51",
 	}}
 
 	for _, tt := range tests {
@@ -78,7 +78,7 @@ func TestFormatWrap(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.TestFormatWrap\n" +
-			"\t/.+/github.com/pkg/errors/format_test.go:77",
+			"\t.+/github.com/pkg/errors/format_test.go:77",
 	}, {
 		Wrap(io.EOF, "error"),
 		"%s",
@@ -108,7 +108,7 @@ func TestFormatWrapf(t *testing.T) {
 		"%+v",
 		"EOF\n" +
 			"github.com/pkg/errors.TestFormatWrapf\n" +
-			"\t/.+/github.com/pkg/errors/format_test.go:107: error",
+			"\t.+/github.com/pkg/errors/format_test.go:107: error",
 	}, {
 		Wrapf(New("error"), "error%d", 2),
 		"%v",
@@ -118,7 +118,7 @@ func TestFormatWrapf(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.TestFormatWrapf\n" +
-			"\t/.+/github.com/pkg/errors/format_test.go:117",
+			"\t.+/github.com/pkg/errors/format_test.go:117",
 	}}
 
 	for _, tt := range tests {
