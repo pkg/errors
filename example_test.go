@@ -132,7 +132,8 @@ func Example_stacktrace() {
 	st := err.Stacktrace()
 	fmt.Printf("%+v", st[0:2]) // top two frames
 
-	// Output: github.com/pkg/errors_test.fn
+	// Example output:
+	// github.com/pkg/errors_test.fn
 	//	/home/dfc/src/github.com/pkg/errors/example_test.go:47
 	// github.com/pkg/errors_test.Example_stacktrace
 	//	/home/dfc/src/github.com/pkg/errors/example_test.go:127
