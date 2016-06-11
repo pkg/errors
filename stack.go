@@ -59,7 +59,7 @@ func (f Frame) Format(s fmt.State, verb rune) {
 				io.WriteString(s, "unknown")
 			} else {
 				file, _ := fn.FileLine(pc)
-				io.WriteString(s, trimGOPATH(fn.Name(), file))
+				fmt.Fprintf(s, "%s\n\t%s", fn.Name(), file)
 			}
 		default:
 			io.WriteString(s, path.Base(f.file()))
@@ -84,7 +84,9 @@ func (st Stacktrace) Format(s fmt.State, verb rune) {
 	case 'v':
 		switch {
 		case s.Flag('+'):
-			fmt.Fprintf(s, "%+v", []Frame(st))
+			for _, f := range st {
+				fmt.Fprintf(s, "\n%+v", f)
+			}
 		case s.Flag('#'):
 			fmt.Fprintf(s, "%#v", []Frame(st))
 		default:

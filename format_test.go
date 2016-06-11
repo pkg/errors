@@ -3,28 +3,43 @@ package errors
 import (
 	"fmt"
 	"io"
+	"regexp"
+	"strings"
 	"testing"
 )
 
-func TestFormat(t *testing.T) {
+func TestFormatNew(t *testing.T) {
 	tests := []struct {
 		error
 		format string
 		want   string
 	}{{
+		New("error"),
+		"%s",
+		"error",
+	}, {
+		New("error"),
+		"%v",
+		"error",
+	}, {
+		New("error"),
+		"%+v",
+		"error\n" +
+			"github.com/pkg/errors.TestFormatNew\n" +
+			"\t.+/github.com/pkg/errors/format_test.go:25",
+	}}
 
-		New("error"),
-		"%s",
-		"error",
-	}, {
-		New("error"),
-		"%v",
-		"error",
-	}, {
-		New("error"),
-		"%+v",
-		"github.com/pkg/errors/format_test.go:24: error",
-	}, {
+	for _, tt := range tests {
+		testFormatRegexp(t, tt.error, tt.format, tt.want)
+	}
+}
+
+func TestFormatErrorf(t *testing.T) {
+	tests := []struct {
+		error
+		format string
+		want   string
+	}{{
 		Errorf("%s", "error"),
 		"%s",
 		"error",
@@ -35,8 +50,22 @@ func TestFormat(t *testing.T) {
 	}, {
 		Errorf("%s", "error"),
 		"%+v",
-		"github.com/pkg/errors/format_test.go:36: error",
-	}, {
+		"error\n" +
+			"github.com/pkg/errors.TestFormatErrorf\n" +
+			"\t.+/github.com/pkg/errors/format_test.go:51",
+	}}
+
+	for _, tt := range tests {
+		testFormatRegexp(t, tt.error, tt.format, tt.want)
+	}
+}
+
+func TestFormatWrap(t *testing.T) {
+	tests := []struct {
+		error
+		format string
+		want   string
+	}{{
 		Wrap(New("error"), "error2"),
 		"%s",
 		"error2: error",
@@ -47,13 +76,26 @@ func TestFormat(t *testing.T) {
 	}, {
 		Wrap(New("error"), "error2"),
 		"%+v",
-		"github.com/pkg/errors/format_test.go:48: error\n" +
-			"github.com/pkg/errors/format_test.go:48: error2",
+		"error\n" +
+			"github.com/pkg/errors.TestFormatWrap\n" +
+			"\t.+/github.com/pkg/errors/format_test.go:77",
 	}, {
 		Wrap(io.EOF, "error"),
 		"%s",
 		"error: EOF",
-	}, {
+	}}
+
+	for _, tt := range tests {
+		testFormatRegexp(t, tt.error, tt.format, tt.want)
+	}
+}
+
+func TestFormatWrapf(t *testing.T) {
+	tests := []struct {
+		error
+		format string
+		want   string
+	}{{
 		Wrapf(New("error"), "error%d", 2),
 		"%s",
 		"error2: error",
@@ -65,7 +107,8 @@ func TestFormat(t *testing.T) {
 		Wrap(io.EOF, "error"),
 		"%+v",
 		"EOF\n" +
-			"github.com/pkg/errors/format_test.go:65: error",
+			"github.com/pkg/errors.TestFormatWrapf\n" +
+			"\t.+/github.com/pkg/errors/format_test.go:107: error",
 	}, {
 		Wrapf(New("error"), "error%d", 2),
 		"%v",
@@ -73,14 +116,26 @@ func TestFormat(t *testing.T) {
 	}, {
 		Wrapf(New("error"), "error%d", 2),
 		"%+v",
-		"github.com/pkg/errors/format_test.go:74: error\n" +
-			"github.com/pkg/errors/format_test.go:74: error2",
+		"error\n" +
+			"github.com/pkg/errors.TestFormatWrapf\n" +
+			"\t.+/github.com/pkg/errors/format_test.go:117",
 	}}
 
 	for _, tt := range tests {
-		got := fmt.Sprintf(tt.format, tt.error)
-		if got != tt.want {
-			t.Errorf("fmt.Sprintf(%q, err): got: %q, want: %q", tt.format, got, tt.want)
+		testFormatRegexp(t, tt.error, tt.format, tt.want)
+	}
+}
+
+func testFormatRegexp(t *testing.T, arg interface{}, format, want string) {
+	got := fmt.Sprintf(format, arg)
+	lines := strings.SplitN(got, "\n", -1)
+	for i, w := range strings.SplitN(want, "\n", -1) {
+		match, err := regexp.MatchString(w, lines[i])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !match {
+			t.Errorf("fmt.Sprintf(%q, err): got: %q, want: %q", format, got, want)
 		}
 	}
 }
