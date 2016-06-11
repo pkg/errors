@@ -30,9 +30,11 @@ type Stacktrace interface {
 ```
 The `Frame` type represents a call site in the stacktrace.
 `Frame` supports the `fmt.Formatter` interface that can be used for printing information about the stacktrace of this error. For example
-```
+```go
 if err, ok := err.(Stacktrace); ok {
-        fmt.Printf("%+s:%d", err.Stacktrace())
+	for _, f := range err.Stacktrace() {
+               fmt.Printf("%+s:%d", f)
+        }
 }
 ```
 See [the documentation for `Frame.Format`](https://godoc.org/github.com/pkg/errors#Frame_Format) for more details.
