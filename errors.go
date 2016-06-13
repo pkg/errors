@@ -108,10 +108,10 @@ func (e _error) Format(s fmt.State, verb rune) {
 	}
 }
 
-// New returns an error that formats as the given text.
-func New(text string) error {
+// New returns an error with the supplied message.
+func New(message string) error {
 	return _error{
-		text,
+		message,
 		callers(),
 	}
 }
