@@ -2,9 +2,9 @@
 //
 // The traditional error handling idiom in Go is roughly akin to
 //
-//      if err != nil {
-//              return err
-//      }
+//     if err != nil {
+//             return err
+//     }
 //
 // which applied recursively up the call stack results in error reports
 // without context or debugging information. The errors package allows
@@ -16,10 +16,10 @@
 // The errors.Wrap function returns a new error that adds context to the
 // original error. For example
 //
-//      _, err := ioutil.ReadAll(r)
-//      if err != nil {
-//              return errors.Wrap(err, "read failed")
-//      }
+//     _, err := ioutil.ReadAll(r)
+//     if err != nil {
+//             return errors.Wrap(err, "read failed")
+//     }
 //
 // Retrieving the cause of an error
 //
