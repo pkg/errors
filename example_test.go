@@ -120,16 +120,16 @@ func ExampleErrorf_extended() {
 }
 
 func Example_stacktrace() {
-	type Stacktrace interface {
-		Stacktrace() errors.Stacktrace
+	type StackTrace interface {
+		StackTrace() errors.StackTrace
 	}
 
-	err, ok := errors.Cause(fn()).(Stacktrace)
+	err, ok := errors.Cause(fn()).(StackTrace)
 	if !ok {
-		panic("oops, err does not implement Stacktrace")
+		panic("oops, err does not implement StackTrace")
 	}
 
-	st := err.Stacktrace()
+	st := err.StackTrace()
 	fmt.Printf("%+v", st[0:2]) // top two frames
 
 	// Example output:
