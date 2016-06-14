@@ -140,6 +140,10 @@ type wrapper struct {
 	*stack
 }
 
+func (w wrapper) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + w.Error() + `"`), nil
+}
+
 func (w wrapper) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
