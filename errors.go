@@ -59,7 +59,7 @@
 // New, Errorf, Wrap, and Wrapf record a stack trace at the point they are
 // invoked. This information can be retrieved with the following interface.
 //
-//     type StackTrace interface {
+//     type stacktracer interface {
 //             StackTrace() errors.StackTrace
 //     }
 //
@@ -71,7 +71,7 @@
 // the fmt.Formatter interface that can be used for printing information about
 // the stacktrace of this error. For example:
 //
-//     if err, ok := err.(StackTrace); ok {
+//     if err, ok := err.(stacktracer); ok {
 //             for _, f := range err.StackTrace() {
 //                     fmt.Printf("%+s:%d", f)
 //             }
