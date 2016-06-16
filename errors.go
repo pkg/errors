@@ -28,7 +28,7 @@
 // to reverse the operation of errors.Wrap to retrieve the original error
 // for inspection. Any error value which implements this interface
 //
-//     type Causer interface {
+//     interface {
 //             Cause() error
 //     }
 //
@@ -59,7 +59,7 @@
 // New, Errorf, Wrap, and Wrapf record a stack trace at the point they are
 // invoked. This information can be retrieved with the following interface.
 //
-//     type StackTrace interface {
+//     interface {
 //             StackTrace() errors.StackTrace
 //     }
 //
