@@ -120,13 +120,13 @@ func ExampleErrorf_extended() {
 }
 
 func Example_stacktrace() {
-	type StackTrace interface {
+	type stacktracer interface {
 		StackTrace() errors.StackTrace
 	}
 
-	err, ok := errors.Cause(fn()).(StackTrace)
+	err, ok := errors.Cause(fn()).(stacktracer)
 	if !ok {
-		panic("oops, err does not implement StackTrace")
+		panic("oops, err does not implement stacktracer")
 	}
 
 	st := err.StackTrace()
