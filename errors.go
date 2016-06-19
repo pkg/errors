@@ -145,7 +145,8 @@ func (w wrapper) Format(s fmt.State, verb rune) {
 	case 'v':
 		if s.Flag('+') {
 			fmt.Fprintf(s, "%+v\n", w.Cause())
-			fmt.Fprintf(s, "%+v: %s", w.StackTrace()[0], w.msg)
+			io.WriteString(s, w.msg)
+			fmt.Fprintf(s, "%+v", w.StackTrace())
 			return
 		}
 		fallthrough
