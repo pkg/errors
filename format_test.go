@@ -83,6 +83,10 @@ func TestFormatWrap(t *testing.T) {
 		Wrap(io.EOF, "error"),
 		"%s",
 		"error: EOF",
+	}, {
+		Wrap(New("error with space"), "context"),
+		"%q",
+		`"context: error with space"`,
 	}}
 
 	for _, tt := range tests {
@@ -109,7 +113,7 @@ func TestFormatWrapf(t *testing.T) {
 		"EOF\n" +
 			"error\n" +
 			"github.com/pkg/errors.TestFormatWrapf\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:107",
+			"\t.+/github.com/pkg/errors/format_test.go:111",
 	}, {
 		Wrapf(New("error"), "error%d", 2),
 		"%v",
@@ -119,14 +123,14 @@ func TestFormatWrapf(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.TestFormatWrapf\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:118",
+			"\t.+/github.com/pkg/errors/format_test.go:122",
 	}, {
 		Wrap(Wrap(io.EOF, "error1"), "error2"),
 		"%+v",
 		"EOF\n" +
 			"error1\n" +
 			"github.com/pkg/errors.TestFormatWrapf\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:124\n",
+			"\t.+/github.com/pkg/errors/format_test.go:128\n",
 	}}
 
 	for _, tt := range tests {
