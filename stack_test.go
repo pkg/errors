@@ -222,7 +222,7 @@ func TestStackTrace(t *testing.T) {
 	}
 }
 
-func stacktrace() StackTrace {
+func stackTrace() StackTrace {
 	const depth = 8
 	var pcs [depth]uintptr
 	n := runtime.Callers(1, pcs[:])
@@ -268,23 +268,23 @@ func TestStackTraceFormat(t *testing.T) {
 		"%#v",
 		`\[\]errors.Frame{}`,
 	}, {
-		stacktrace()[:2],
+		stackTrace()[:2],
 		"%s",
 		`\[stack_test.go stack_test.go\]`,
 	}, {
-		stacktrace()[:2],
+		stackTrace()[:2],
 		"%v",
 		`\[stack_test.go:228 stack_test.go:275\]`,
 	}, {
-		stacktrace()[:2],
+		stackTrace()[:2],
 		"%+v",
 		"\n" +
-			"github.com/pkg/errors.stacktrace\n" +
+			"github.com/pkg/errors.stackTrace\n" +
 			"\t.+/github.com/pkg/errors/stack_test.go:228\n" +
 			"github.com/pkg/errors.TestStackTraceFormat\n" +
 			"\t.+/github.com/pkg/errors/stack_test.go:279",
 	}, {
-		stacktrace()[:2],
+		stackTrace()[:2],
 		"%#v",
 		`\[\]errors.Frame{stack_test.go:228, stack_test.go:287}`,
 	}}
