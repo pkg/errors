@@ -109,6 +109,10 @@ func (e _error) Format(s fmt.State, verb rune) {
 }
 
 // New returns an error with the supplied message.
+//
+// If New is only used function from this package in file processed
+// by goimports then you'll have to manually import this package,
+// otherwise stdlib's errors.New() will be called instead.
 func New(message string) error {
 	return _error{
 		message,
