@@ -81,37 +81,16 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"io"
 )
 
-// _error is an error implementation returned by New and Errorf
-// that implements its own fmt.Formatter.
-type _error struct {
-	msg string
-	*stack
-}
-
-func (e _error) Error() string { return e.msg }
-
-func (e _error) Format(s fmt.State, verb rune) {
-	switch verb {
-	case 'v':
-		if s.Flag('+') {
-			io.WriteString(s, e.msg)
-			fmt.Fprintf(s, "%+v", e.StackTrace())
-			return
-		}
-		fallthrough
-	case 's':
-		io.WriteString(s, e.msg)
-	}
-}
-
 // New returns an error with the supplied message.
 func New(message string) error {
-	return _error{
-		message,
+	err := errors.New(message)
+	return &withStack{
+		err,
 		callers(),
 	}
 }
@@ -119,9 +98,29 @@ func New(message string) error {
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 func Errorf(format string, args ...interface{}) error {
-	return _error{
-		fmt.Sprintf(format, args...),
+	err := fmt.Errorf(format, args...)
+	return &withStack{
+		err,
 		callers(),
+	}
+}
+
+type withStack struct {
+	error
+	*stack
+}
+
+func (w *withStack) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			io.WriteString(s, w.Error())
+			w.stack.Format(s, verb)
+			return
+		}
+		fallthrough
+	case 's':
+		io.WriteString(s, w.Error())
 	}
 }
 
