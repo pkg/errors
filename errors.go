@@ -28,7 +28,7 @@
 // to reverse the operation of errors.Wrap to retrieve the original error
 // for inspection. Any error value which implements this interface
 //
-//     type Causer interface {
+//     type causer interface {
 //             Cause() error
 //     }
 //
@@ -42,6 +42,9 @@
 //     default:
 //             // unknown error
 //     }
+//
+// causer interface is not exported by this package, but is considered a part
+// of stable public API.
 //
 // Formatted printing of errors
 //
@@ -76,6 +79,9 @@
 //                     fmt.Printf("%+s:%d", f)
 //             }
 //     }
+//
+// stackTracer interface is not exported by this package, but is considered a part
+// of stable public API.
 //
 // See the documentation for Frame.Format for more details.
 package errors
@@ -191,7 +197,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 // An error value has a cause if it implements the following
 // interface:
 //
-//     type Causer interface {
+//     type causer interface {
 //            Cause() error
 //     }
 //
