@@ -218,8 +218,8 @@ func TestErrorEquality(t *testing.T) {
 		WithStack(nil),
 	}
 
-	for i := 0; i < len(vals); i++ {
-		for j := 0; j < len(vals); j++ {
+	for i := range vals {
+		for j := range vals {
 			_ = vals[i] == vals[j] // mustn't panic
 		}
 	}
