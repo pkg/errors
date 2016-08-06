@@ -328,21 +328,21 @@ func TestFormatGeneric(t *testing.T) {
 		}, {
 			func(err error) error { return WithStack(err) },
 			[]string{
-				"github.com/pkg/errors.TestFormatGeneric.func2\n\t" +
+				"github.com/pkg/errors.(func·002|TestFormatGeneric.func2)\n\t" +
 					".+/github.com/pkg/errors/format_test.go:329",
 			},
 		}, {
 			func(err error) error { return Wrap(err, "wrap-error") },
 			[]string{
 				"wrap-error",
-				"github.com/pkg/errors.TestFormatGeneric.func3\n\t" +
+				"github.com/pkg/errors.(func·003|TestFormatGeneric.func3)\n\t" +
 					".+/github.com/pkg/errors/format_test.go:335",
 			},
 		}, {
 			func(err error) error { return Wrapf(err, "wrapf-error%d", 1) },
 			[]string{
 				"wrapf-error1",
-				"github.com/pkg/errors.TestFormatGeneric.func4\n\t" +
+				"github.com/pkg/errors.(func·004|TestFormatGeneric.func4)\n\t" +
 					".+/github.com/pkg/errors/format_test.go:342",
 			},
 		},
