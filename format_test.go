@@ -219,7 +219,7 @@ func TestFormatWithStack(t *testing.T) {
 	}}
 
 	for i, tt := range tests {
-		testFormatCompleteCompare(t, i, tt.error, tt.format, tt.want)
+		testFormatCompleteCompare(t, i, tt.error, tt.format, tt.want, true)
 	}
 }
 
@@ -299,7 +299,60 @@ func TestFormatWithMessage(t *testing.T) {
 	}}
 
 	for i, tt := range tests {
-		testFormatCompleteCompare(t, i, tt.error, tt.format, tt.want)
+		testFormatCompleteCompare(t, i, tt.error, tt.format, tt.want, true)
+	}
+}
+
+func TestFormatGeneric(t *testing.T) {
+	starts := []struct {
+		err  error
+		want []string
+	}{
+		{New("new-error"), []string{
+			"new-error",
+			"github.com/pkg/errors.TestFormatGeneric\n" +
+				"\t.+/github.com/pkg/errors/format_test.go:311"},
+		}, {Errorf("errorf-error"), []string{
+			"errorf-error",
+			"github.com/pkg/errors.TestFormatGeneric\n" +
+				"\t.+/github.com/pkg/errors/format_test.go:315"},
+		}, {errors.New("errors-new-error"), []string{
+			"errors-new-error"},
+		},
+	}
+
+	wrappers := []wrapper{
+		{
+			func(err error) error { return WithMessage(err, "with-message") },
+			[]string{"with-message"},
+		}, {
+			func(err error) error { return WithStack(err) },
+			[]string{
+				"github.com/pkg/errors.TestFormatGeneric.func2\n\t" +
+					".+/github.com/pkg/errors/format_test.go:329",
+			},
+		}, {
+			func(err error) error { return Wrap(err, "wrap-error") },
+			[]string{
+				"wrap-error",
+				"github.com/pkg/errors.TestFormatGeneric.func3\n\t" +
+					".+/github.com/pkg/errors/format_test.go:335",
+			},
+		}, {
+			func(err error) error { return Wrapf(err, "wrapf-error%d", 1) },
+			[]string{
+				"wrapf-error1",
+				"github.com/pkg/errors.TestFormatGeneric.func4\n\t" +
+					".+/github.com/pkg/errors/format_test.go:342",
+			},
+		},
+	}
+
+	for s := range starts {
+		err := starts[s].err
+		want := starts[s].want
+		testFormatCompleteCompare(t, s, err, "%+v", want, false)
+		testGenericRecursive(t, err, want, wrappers, 3)
 	}
 }
 
@@ -330,6 +383,9 @@ var stackLineR = regexp.MustCompile(`\.`)
 //  - incase entry contains a newline, its a stacktrace
 //  - incase entry contains no newline, its a solo line.
 //
+// Detecting stack boundaries only works incase the WithStack-calls are
+// to be found on the same line, thats why it is optionally here.
+//
 // Example use:
 //
 // for _, e := range blocks {
@@ -339,7 +395,8 @@ var stackLineR = regexp.MustCompile(`\.`)
 //     // Match as line
 //   }
 // }
-func parseBlocks(input string) ([]string, error) {
+//
+func parseBlocks(input string, detectStackboundaries bool) ([]string, error) {
 	var blocks []string
 
 	stack := ""
@@ -358,15 +415,17 @@ func parseBlocks(input string) ([]string, error) {
 			if wasStack {
 				// Detecting two stacks after another, possible cause lines match in
 				// our tests due to WithStack(WithStack(io.EOF)) on same line.
-				if lines[l] {
-					if len(stack) == 0 {
-						return nil, errors.New("len of block must not be zero here")
-					}
+				if detectStackboundaries {
+					if lines[l] {
+						if len(stack) == 0 {
+							return nil, errors.New("len of block must not be zero here")
+						}
 
-					blocks = append(blocks, stack)
-					stack = l
-					lines = map[string]bool{l: true}
-					continue
+						blocks = append(blocks, stack)
+						stack = l
+						lines = map[string]bool{l: true}
+						continue
+					}
 				}
 
 				stack = stack + "\n" + l
@@ -390,17 +449,17 @@ func parseBlocks(input string) ([]string, error) {
 	return blocks, nil
 }
 
-func testFormatCompleteCompare(t *testing.T, n int, arg interface{}, format string, want []string) {
+func testFormatCompleteCompare(t *testing.T, n int, arg interface{}, format string, want []string, detectStackBoundaries bool) {
 	gotStr := fmt.Sprintf(format, arg)
 
-	got, err := parseBlocks(gotStr)
+	got, err := parseBlocks(gotStr, detectStackBoundaries)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if len(got) != len(want) {
-		t.Fatalf("test %d: fmt.Sprintf(%s, err) -> wrong number of blocks: got(%d) want(%d)\n got: %q\nwant: %q\ngotStr: %q",
-			n+1, format, len(got), len(want), got, want, gotStr)
+		t.Fatalf("test %d: fmt.Sprintf(%s, err) -> wrong number of blocks: got(%d) want(%d)\n got: %s\nwant: %s\ngotStr: %q",
+			n+1, format, len(got), len(want), prettyBlocks(got), prettyBlocks(want), gotStr)
 	}
 
 	for i := range got {
@@ -411,13 +470,62 @@ func testFormatCompleteCompare(t *testing.T, n int, arg interface{}, format stri
 				t.Fatal(err)
 			}
 			if !match {
-				t.Errorf("test %d: block %d: fmt.Sprintf(%q, err):\n got: %q\nwant: %q", n+1, i+1, format, got[i], want[i])
+				t.Fatalf("test %d: block %d: fmt.Sprintf(%q, err):\ngot:\n%q\nwant:\n%q\nall-got:\n%s\nall-want:\n%s\n",
+					n+1, i+1, format, got[i], want[i], prettyBlocks(got), prettyBlocks(want))
 			}
 		} else {
 			// Match as message
 			if got[i] != want[i] {
-				t.Errorf("test %d: fmt.Sprintf(%s, err) at block %d got != want:\n got: %q\nwant: %q", n+1, format, i+1, got[i], want[i])
+				t.Fatalf("test %d: fmt.Sprintf(%s, err) at block %d got != want:\n got: %q\nwant: %q", n+1, format, i+1, got[i], want[i])
 			}
+		}
+	}
+}
+
+type wrapper struct {
+	wrap func(err error) error
+	want []string
+}
+
+func prettyBlocks(blocks []string, prefix ...string) string {
+	var out []string
+
+	for _, b := range blocks {
+		out = append(out, fmt.Sprintf("%v", b))
+	}
+
+	return "   " + strings.Join(out, "\n   ")
+}
+
+func testGenericRecursive(t *testing.T, beforeErr error, beforeWant []string, list []wrapper, maxDepth int) {
+	if len(beforeWant) == 0 {
+		panic("beforeWant must not be empty")
+	}
+	for _, w := range list {
+		if len(w.want) == 0 {
+			panic("want must not be empty")
+		}
+
+		err := w.wrap(beforeErr)
+
+		// Copy required cause append(beforeWant, ..) modified beforeWant subtly.
+		beforeCopy := make([]string, len(beforeWant))
+		copy(beforeCopy, beforeWant)
+
+		beforeWant := beforeCopy
+		last := len(beforeWant) - 1
+		var want []string
+
+		// Merge two stacks behind each other.
+		if strings.ContainsAny(beforeWant[last], "\n") && strings.ContainsAny(w.want[0], "\n") {
+			want = append(beforeWant[:last], append([]string{beforeWant[last] + "((?s).*)" + w.want[0]}, w.want[1:]...)...)
+		} else {
+			want = append(beforeWant, w.want...)
+		}
+
+		testFormatCompleteCompare(t, maxDepth, err, "%+v", want, false)
+		if maxDepth > 0 {
+			testGenericRecursive(t, err, want, list, maxDepth-1)
 		}
 	}
 }
