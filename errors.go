@@ -132,18 +132,6 @@ func (f *fundamental) Format(s fmt.State, verb rune) {
 	}
 }
 
-// WithStack annotates err with a stack trace at the point WithStack was called.
-// If err is nil, WithStack returns nil.
-func WithStack(err error) error {
-	if err == nil {
-		return nil
-	}
-	return &withStack{
-		err,
-		callers(),
-	}
-}
-
 type withStack struct {
 	error
 	*stack
@@ -202,18 +190,6 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	return &withStack{
 		err,
 		callers(),
-	}
-}
-
-// WithMessage annotates err with a new message.
-// If err is nil, WithStack returns nil.
-func WithMessage(err error, message string) error {
-	if err == nil {
-		return nil
-	}
-	return &withMessage{
-		cause: err,
-		msg:   message,
 	}
 }
 
