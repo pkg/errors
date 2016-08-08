@@ -120,8 +120,8 @@ func TestFrameFormat(t *testing.T) {
 		"unknown:0",
 	}}
 
-	for _, tt := range tests {
-		testFormatRegexp(t, tt.Frame, tt.format, tt.want)
+	for i, tt := range tests {
+		testFormatRegexp(t, i, tt.Frame, tt.format, tt.want)
 	}
 }
 
@@ -155,12 +155,12 @@ func TestTrimGOPATH(t *testing.T) {
 		"github.com/pkg/errors/stack_test.go",
 	}}
 
-	for _, tt := range tests {
+	for i, tt := range tests {
 		pc := tt.Frame.pc()
 		fn := runtime.FuncForPC(pc)
 		file, _ := fn.FileLine(pc)
 		got := trimGOPATH(fn.Name(), file)
-		testFormatRegexp(t, got, "%s", tt.want)
+		testFormatRegexp(t, i, got, "%s", tt.want)
 	}
 }
 
@@ -204,7 +204,7 @@ func TestStackTrace(t *testing.T) {
 				"\t.+/github.com/pkg/errors/stack_test.go:198", // this is the stack of Errorf's caller's caller
 		},
 	}}
-	for _, tt := range tests {
+	for i, tt := range tests {
 		x, ok := tt.err.(interface {
 			StackTrace() StackTrace
 		})
@@ -214,7 +214,7 @@ func TestStackTrace(t *testing.T) {
 		}
 		st := x.StackTrace()
 		for j, want := range tt.want {
-			testFormatRegexp(t, st[j], "%+v", want)
+			testFormatRegexp(t, i, st[j], "%+v", want)
 		}
 	}
 }
@@ -286,7 +286,7 @@ func TestStackTraceFormat(t *testing.T) {
 		`\[\]errors.Frame{stack_test.go:225, stack_test.go:284}`,
 	}}
 
-	for _, tt := range tests {
-		testFormatRegexp(t, tt.StackTrace, tt.format, tt.want)
+	for i, tt := range tests {
+		testFormatRegexp(t, i, tt.StackTrace, tt.format, tt.want)
 	}
 }
