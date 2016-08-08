@@ -157,9 +157,6 @@ func (w *withStack) Format(s fmt.State, verb rune) {
 
 // Wrap returns an error annotating err with message.
 // If err is nil, Wrap returns nil.
-// Wrap is conceptually the same as calling
-//
-//     errors.WithStack(errors.WithMessage(err, msg))
 func Wrap(err error, message string) error {
 	if err == nil {
 		return nil
@@ -176,9 +173,6 @@ func Wrap(err error, message string) error {
 
 // Wrapf returns an error annotating err with the format specifier.
 // If err is nil, Wrapf returns nil.
-// Wrapf is conceptually the same as calling
-//
-//     errors.WithStack(errors.WithMessage(err, format, args...))
 func Wrapf(err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
