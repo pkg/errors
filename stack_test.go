@@ -155,12 +155,12 @@ func TestTrimGOPATH(t *testing.T) {
 		"github.com/pkg/errors/stack_test.go",
 	}}
 
-	for i, tt := range tests {
+	for _, tt := range tests {
 		pc := tt.Frame.pc()
 		fn := runtime.FuncForPC(pc)
 		file, _ := fn.FileLine(pc)
 		got := trimGOPATH(fn.Name(), file)
-		testFormatRegexp(t, i, got, "%s", tt.want)
+		testFormatRegexp(t, got, "%s", tt.want)
 	}
 }
 
