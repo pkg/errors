@@ -202,7 +202,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 }
 
 // WithMessage annotates err with a new message.
-// If err is nil, WithStack returns nil.
+// If err is nil, WithMessage returns nil.
 func WithMessage(err error, message string) error {
 	if err == nil {
 		return nil
