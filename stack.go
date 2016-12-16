@@ -52,7 +52,7 @@ func (f Frame) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
 		switch {
-		case s.Flag('+'):
+		case s.Flag('+'), debugEnabled.Get():
 			pc := f.pc()
 			fn := runtime.FuncForPC(pc)
 			if fn == nil {
@@ -83,7 +83,7 @@ func (st StackTrace) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		switch {
-		case s.Flag('+'):
+		case s.Flag('+'), debugEnabled.Get():
 			for _, f := range st {
 				fmt.Fprintf(s, "\n%+v", f)
 			}
@@ -104,7 +104,7 @@ func (s *stack) Format(st fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		switch {
-		case st.Flag('+'):
+		case st.Flag('+'), debugEnabled.Get():
 			for _, pc := range *s {
 				f := Frame(pc)
 				fmt.Fprintf(st, "\n%+v", f)

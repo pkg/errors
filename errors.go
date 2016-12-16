@@ -58,7 +58,8 @@
 //
 //     %s    print the error. If the error has a Cause it will be
 //           printed recursively
-//     %v    see %s
+//     %v    if Debug(true) has not been called, this is equivalent to %s.
+//           Otherwise it is equivalent to %+v.
 //     %+v   extended format. Each Frame of the error's StackTrace will
 //           be printed in detail.
 //
@@ -94,7 +95,47 @@ package errors
 import (
 	"fmt"
 	"io"
+	"sync"
 )
+
+// boolMutex combines a sync.RWMutex with a bool where each method is correctly
+// handled by locking and unlocking the mutex appropriately so you can use it
+// in one-liners.
+type boolMutex struct {
+	m     *sync.RWMutex
+	value bool
+}
+
+// debugEnabled defines whether debugging is currently globally enabled. If it
+// is enabled then Format (with a formatting flag of "%v") should always return
+// a stack-based output (even if "+" is not set).
+var debugEnabled = &boolMutex{
+	m:     new(sync.RWMutex),
+	value: false,
+}
+
+// Set sets the value stored in bm to the provided boolean.
+func (bm *boolMutex) Set(new bool) {
+	bm.m.Lock()
+	bm.value = new
+	bm.m.Unlock()
+}
+
+// Get returns the current value stored in bm.
+func (bm *boolMutex) Get() bool {
+	bm.m.RLock()
+	value := bm.value
+	bm.m.RUnlock()
+	return value
+}
+
+// Debug sets whether or not debugging is enabled. If enabled, then formatting
+// an error wrapped by pkg/error with "%v" will return a full stack trace. This
+// allows you to dynamically decide whether to output stack traces (without
+// having to use "%+v" indiscriminately).
+func Debug(value bool) {
+	debugEnabled.Set(value)
+}
 
 // New returns an error with the supplied message.
 // New also records the stack trace at the point it was called.
@@ -126,7 +167,7 @@ func (f *fundamental) Error() string { return f.msg }
 func (f *fundamental) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
-		if s.Flag('+') {
+		if s.Flag('+') || debugEnabled.Get() {
 			io.WriteString(s, f.msg)
 			f.stack.Format(s, verb)
 			return
@@ -161,7 +202,7 @@ func (w *withStack) Cause() error { return w.error }
 func (w *withStack) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
-		if s.Flag('+') {
+		if s.Flag('+') || debugEnabled.Get() {
 			fmt.Fprintf(s, "%+v", w.Cause())
 			w.stack.Format(s, verb)
 			return
@@ -231,7 +272,7 @@ func (w *withMessage) Cause() error  { return w.cause }
 func (w *withMessage) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
-		if s.Flag('+') {
+		if s.Flag('+') || debugEnabled.Get() {
 			fmt.Fprintf(s, "%+v\n", w.Cause())
 			io.WriteString(s, w.msg)
 			return
