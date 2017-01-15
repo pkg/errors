@@ -318,7 +318,7 @@ func TestFrame(t *testing.T) {
 	}, {
 		func() error { return New("ooh") }(), []stack{
 			// this is the stack of New
-			{"github.com/pkg/errors/stack_test.go", "TestFrame.func1", 319},
+			{"github.com/pkg/errors/stack_test.go", "(func·012|TestFrame.func1)", 319},
 			// this is the stack of New's caller
 			{"github.com/pkg/errors/stack_test.go", "TestFrame", 319},
 		},
@@ -329,9 +329,9 @@ func TestFrame(t *testing.T) {
 			}()
 		}()), []stack{
 			// this is the stack of Errorf
-			{"github.com/pkg/errors/stack_test.go", "TestFrame.func2.1", 328},
+			{"github.com/pkg/errors/stack_test.go", "(func·013|TestFrame.func2.1)", 328},
 			// this is the stack of Errorf's caller
-			{"github.com/pkg/errors/stack_test.go", "TestFrame.func2", 329},
+			{"github.com/pkg/errors/stack_test.go", "(func·014|TestFrame.func2)", 329},
 			// this is the stack of Errorf's caller's caller
 			{"github.com/pkg/errors/stack_test.go", "TestFrame", 330},
 		},
@@ -347,7 +347,11 @@ func TestFrame(t *testing.T) {
 		st := x.StackTrace()
 		for j, want := range tt.want {
 			got := stack{st[j].File(), st[j].Func(), st[j].Line()}
-			if got != want {
+			match, err := regexpMatchString(want.funcname, got.funcname)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.file != want.file || got.line != want.line || !match {
 				t.Errorf("test %d: line %d:\n got: %v\nwant: %v", i+1, j+1, got, want)
 			}
 		}

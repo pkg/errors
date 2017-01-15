@@ -533,3 +533,7 @@ func testGenericRecursive(t *testing.T, beforeErr error, beforeWant []string, li
 		}
 	}
 }
+
+func regexpMatchString(pattern, s string) (bool, error) {
+	return regexp.MatchString(pattern, s)
+}
