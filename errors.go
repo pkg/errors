@@ -242,6 +242,11 @@ func (w *withMessage) Format(s fmt.State, verb rune) {
 	}
 }
 
+// Causer returns the underlying cause of the error, if applicable.
+type Causer interface {
+	Cause() error
+}
+
 // Cause returns the underlying cause of the error, if possible.
 // An error value has a cause if it implements the following
 // interface:
