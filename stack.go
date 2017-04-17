@@ -11,6 +11,11 @@ import (
 // Frame represents a program counter inside a stack frame.
 type Frame uintptr
 
+// Name returns the name of function for this Frame's pc.
+func (f Frame) Name() string {
+	return funcname(runtime.FuncForPC(f.pc()).Name())
+}
+
 // pc returns the program counter for this frame;
 // multiple frames may have the same PC value.
 func (f Frame) pc() uintptr { return uintptr(f) - 1 }
