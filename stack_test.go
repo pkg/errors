@@ -6,37 +6,37 @@ import (
 	"testing"
 )
 
-var initpc, _, _, _ = runtime.Caller(0)
+var initFrame = testCaller(0)
 
 func TestFrameLine(t *testing.T) {
 	var tests = []struct {
 		Frame
 		want int
 	}{{
-		Frame(initpc),
+		Frame(initFrame),
 		9,
 	}, {
 		func() Frame {
-			var pc, _, _, _ = runtime.Caller(0)
-			return Frame(pc)
+			var f = testCaller(0)
+			return f
 		}(),
 		20,
 	}, {
 		func() Frame {
-			var pc, _, _, _ = runtime.Caller(1)
-			return Frame(pc)
+			var f = testCaller(1)
+			return f
 		}(),
 		28,
 	}, {
-		Frame(0), // invalid PC
+		Frame{}, // invalid PC
 		0,
 	}}
 
 	for _, tt := range tests {
-		got := tt.Frame.line()
+		got := tt.Frame.rf.Line
 		want := tt.want
 		if want != got {
-			t.Errorf("Frame(%v): want: %v, got: %v", uintptr(tt.Frame), want, got)
+			t.Errorf("Frame(%v): want: %v, got: %v", tt.Frame.rf.PC, want, got)
 		}
 	}
 }
@@ -44,13 +44,13 @@ func TestFrameLine(t *testing.T) {
 type X struct{}
 
 func (x X) val() Frame {
-	var pc, _, _, _ = runtime.Caller(0)
-	return Frame(pc)
+	var f = testCaller(0)
+	return f
 }
 
 func (x *X) ptr() Frame {
-	var pc, _, _, _ = runtime.Caller(0)
-	return Frame(pc)
+	var f = testCaller(0)
+	return f
 }
 
 func TestFrameFormat(t *testing.T) {
@@ -59,32 +59,32 @@ func TestFrameFormat(t *testing.T) {
 		format string
 		want   string
 	}{{
-		Frame(initpc),
+		Frame(initFrame),
 		"%s",
 		"stack_test.go",
 	}, {
-		Frame(initpc),
+		Frame(initFrame),
 		"%+s",
 		"github.com/pkg/errors.init\n" +
 			"\t.+/github.com/pkg/errors/stack_test.go",
 	}, {
-		Frame(0),
+		Frame{},
 		"%s",
 		"unknown",
 	}, {
-		Frame(0),
+		Frame{},
 		"%+s",
 		"unknown",
 	}, {
-		Frame(initpc),
+		Frame(initFrame),
 		"%d",
 		"9",
 	}, {
-		Frame(0),
+		Frame{},
 		"%d",
 		"0",
 	}, {
-		Frame(initpc),
+		Frame(initFrame),
 		"%n",
 		"init",
 	}, {
@@ -102,20 +102,20 @@ func TestFrameFormat(t *testing.T) {
 		"%n",
 		"X.val",
 	}, {
-		Frame(0),
+		Frame{},
 		"%n",
 		"",
 	}, {
-		Frame(initpc),
+		Frame(initFrame),
 		"%v",
 		"stack_test.go:9",
 	}, {
-		Frame(initpc),
+		Frame(initFrame),
 		"%+v",
 		"github.com/pkg/errors.init\n" +
 			"\t.+/github.com/pkg/errors/stack_test.go:9",
 	}, {
-		Frame(0),
+		Frame{},
 		"%v",
 		"unknown:0",
 	}}
@@ -151,12 +151,12 @@ func TestTrimGOPATH(t *testing.T) {
 		Frame
 		want string
 	}{{
-		Frame(initpc),
+		Frame(initFrame),
 		"github.com/pkg/errors/stack_test.go",
 	}}
 
 	for i, tt := range tests {
-		pc := tt.Frame.pc()
+		pc := tt.Frame.rf.PC
 		fn := runtime.FuncForPC(pc)
 		file, _ := fn.FileLine(pc)
 		got := trimGOPATH(fn.Name(), file)
@@ -289,4 +289,9 @@ func TestStackTraceFormat(t *testing.T) {
 	for i, tt := range tests {
 		testFormatRegexp(t, i, tt.StackTrace, tt.format, tt.want)
 	}
+}
+
+func testCaller(x int) Frame {
+	st := callers().StackTrace()
+	return st[x]
 }
