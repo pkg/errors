@@ -46,7 +46,7 @@ func (f Frame) line() int {
 //
 // Format accepts flags that alter the printing of some verbs, as follows:
 //
-//    %+s   path of source file relative to the compile time GOPATH
+//    %+s   package name, function name, and absolute path of source file at compile time
 //    %+v   equivalent to %+s:%d
 func (f Frame) Format(s fmt.State, verb rune) {
 	switch verb {
@@ -74,6 +74,28 @@ func (f Frame) Format(s fmt.State, verb rune) {
 		io.WriteString(s, ":")
 		f.Format(s, 'd')
 	}
+}
+
+// File returns the path of the source file relative to the compile time GOPATH.
+func (f Frame) File() string {
+	pc := f.pc()
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		return "unknown"
+	}
+	file, _ := fn.FileLine(pc)
+	return trimGOPATH(fn.Name(), file)
+}
+
+// Func returns the function name.
+func (f Frame) Func() string {
+	name := runtime.FuncForPC(f.pc()).Name()
+	return funcname(name)
+}
+
+// Line returns the source line.
+func (f Frame) Line() int {
+	return f.line()
 }
 
 // StackTrace is stack of Frames from innermost (newest) to outermost (oldest).

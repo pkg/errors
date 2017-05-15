@@ -290,3 +290,70 @@ func TestStackTraceFormat(t *testing.T) {
 		testFormatRegexp(t, i, tt.StackTrace, tt.format, tt.want)
 	}
 }
+
+func TestFrame(t *testing.T) {
+	type stack struct {
+		file     string
+		funcname string
+		line     int
+	}
+
+	tests := []struct {
+		err  error
+		want []stack
+	}{{
+		New("ooh"), []stack{
+			{"github.com/pkg/errors/stack_test.go", "TestFrame", 305},
+		},
+	}, {
+		Wrap(New("ooh"), "ahh"), []stack{
+			// this is the stack of Wrap, not New
+			{"github.com/pkg/errors/stack_test.go", "TestFrame", 309},
+		},
+	}, {
+		Cause(Wrap(New("ooh"), "ahh")), []stack{
+			// this is the stack of New
+			{"github.com/pkg/errors/stack_test.go", "TestFrame", 314},
+		},
+	}, {
+		func() error { return New("ooh") }(), []stack{
+			// this is the stack of New
+			{"github.com/pkg/errors/stack_test.go", "(func·012|TestFrame.func1)", 319},
+			// this is the stack of New's caller
+			{"github.com/pkg/errors/stack_test.go", "TestFrame", 319},
+		},
+	}, {
+		Cause(func() error {
+			return func() error {
+				return Errorf("hello %s", fmt.Sprintf("world"))
+			}()
+		}()), []stack{
+			// this is the stack of Errorf
+			{"github.com/pkg/errors/stack_test.go", "(func·013|TestFrame.func2.1)", 328},
+			// this is the stack of Errorf's caller
+			{"github.com/pkg/errors/stack_test.go", "(func·014|TestFrame.func2)", 329},
+			// this is the stack of Errorf's caller's caller
+			{"github.com/pkg/errors/stack_test.go", "TestFrame", 330},
+		},
+	}}
+	for i, tt := range tests {
+		x, ok := tt.err.(interface {
+			StackTrace() StackTrace
+		})
+		if !ok {
+			t.Errorf("expected %#v to implement StackTrace() StackTrace", tt.err)
+			continue
+		}
+		st := x.StackTrace()
+		for j, want := range tt.want {
+			got := stack{st[j].File(), st[j].Func(), st[j].Line()}
+			match, err := regexpMatchString(want.funcname, got.funcname)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.file != want.file || got.line != want.line || !match {
+				t.Errorf("test %d: line %d:\n got: %v\nwant: %v", i+1, j+1, got, want)
+			}
+		}
+	}
+}
