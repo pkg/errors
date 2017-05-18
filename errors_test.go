@@ -223,3 +223,32 @@ func TestErrorEquality(t *testing.T) {
 		}
 	}
 }
+
+func TestMessage(t *testing.T) {
+	tests := []struct {
+		err error
+		msg  string
+	}{
+		{ WithMessage(fmt.Errorf("whoops"), "here is a message"), "here is a message"},
+		{ WithMessage(fmt.Errorf("foo"), ""), ""},
+		{ WithMessage(fmt.Errorf(""), "bar"), "bar"},
+		{ WithMessage(fmt.Errorf(""), ""), ""},
+		{ New("foo"), "foo"},
+		{ New(""), ""},
+		{ Wrap(fmt.Errorf("whoops"), "message"), "message"},
+		{ Wrap(fmt.Errorf(""), "whoops"), "whoops"},
+		{ Wrap(fmt.Errorf("whoops"), ""), ""},
+		{ Wrap(fmt.Errorf(""), ""), ""},
+		{ WithStack(fmt.Errorf("whooops")), "whooops"},
+
+
+	}
+
+	for _, tt := range tests {
+		got := Message(tt.err)
+
+		if got != tt.msg {
+			t.Errorf("New.Error(): got: %q, want %q", got, tt.msg)
+		}
+	}
+}

@@ -227,6 +227,7 @@ type withMessage struct {
 
 func (w *withMessage) Error() string { return w.msg + ": " + w.cause.Error() }
 func (w *withMessage) Cause() error  { return w.cause }
+func (w *withMessage) Message() string  { return w.msg }
 
 func (w *withMessage) Format(s fmt.State, verb rune) {
 	switch verb {
@@ -266,4 +267,29 @@ func Cause(err error) error {
 		err = cause.Cause()
 	}
 	return err
+}
+
+// Message returns message of an error
+// If no message is available than error itself is returned.
+func Message(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	w, ok := err.(*withMessage)
+	if !ok {
+		s, ok := err.(*withStack)
+		if !ok {
+			return err.Error()
+		}
+
+		w, ok = s.error.(*withMessage)
+		if !ok {
+			return err.Error()
+		}
+
+		return w.msg
+	}
+
+ 	return w.msg
 }
