@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+var (
+	disableStack = false
+)
+
 // Frame represents a program counter inside a stack frame.
 type Frame uintptr
 
@@ -130,6 +134,9 @@ func (s *stack) StackTrace() StackTrace {
 }
 
 func callers() *stack {
+	if disableStack {
+		return nil
+	}
 	const depth = 32
 	var pcs [depth]uintptr
 	n := runtime.Callers(3, pcs[:])
@@ -183,4 +190,9 @@ func trimGOPATH(name, file string) string {
 	// get back to 0 or trim the leading separator
 	file = file[i+len(sep):]
 	return file
+}
+
+// AddStack will enable/disable stack trace in errors (for performance)
+func AddStack(add bool) {
+	disableStack = !add
 }
