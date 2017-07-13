@@ -245,7 +245,7 @@ func (w *withMessage) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			fmt.Fprintf(s, "%+v\n", w.Cause())
+			fmt.Fprintf(s, "%+v\n====================\n", w.Cause())
 			io.WriteString(s, w.msg)
 			return
 		}
