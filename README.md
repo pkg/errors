@@ -21,6 +21,19 @@ if err != nil {
         return errors.Wrap(err, "read failed")
 }
 ```
+
+## Adding value(s) to an error
+
+The errors.WithValue function returns a new error that adds a key+value to the original error (inspired by golang [native context WithValue](https://github.com/golang/go/blob/master/src/context/context.go#L467)). For example
+```go
+path := "/non/existing/file"
+_, err := ioutil.ReadFile(path)
+if err != nil {
+        return errors.WithValue(err, "file-path", path)
+}
+```
+
+
 ## Retrieving the cause of an error
 
 Using `errors.Wrap` constructs a stack of errors, adding context to the preceding error. Depending on the nature of the error it may be necessary to reverse the operation of errors.Wrap to retrieve the original error for inspection. Any error value which implements this interface can be inspected by `errors.Cause`.
