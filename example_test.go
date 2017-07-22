@@ -2,6 +2,7 @@ package errors_test
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -41,6 +42,47 @@ func ExampleWithMessage() {
 	fmt.Println(err)
 
 	// Output: oh noes: whoops
+}
+
+func ExampleWithValue1() {
+	cause := errors.New("whoops")
+	err := errors.WithValue(cause, "key1", "val1")
+	fmt.Println(err)
+
+	// Output: [key1=val1] whoops
+}
+
+func ExampleWithValue2() {
+	cause := errors.New("whoops")
+	err := errors.WithValue(errors.WithValue(cause, "key1", "val1"), "key2", "val2")
+	fmt.Println(err)
+
+	// Output: [key2=val2] [key1=val1] whoops
+}
+
+func ExampleWithValue3() {
+	cause := errors.New("whoops")
+	err := errors.WithValue(errors.WithValue(errors.WithValue(cause, "key1", "val1"), "key2", "val2"), "key1", "val1b")
+
+	fmt.Println(err)
+
+	// Output: [key1=val1b] [key2=val2] [key1=val1] whoops
+}
+
+func ExampleUniqueValues() {
+	cause := errors.New("whoops")
+	err := errors.WithValue(errors.WithValue(errors.WithValue(cause, "key1", "val1"), "key2", "val2"), "key1", "val1b")
+
+	orderedKeys, valueMap := errors.UniqueValues(err)
+
+	valStrs := []string{}
+	for _, key := range orderedKeys {
+		valStrs = append(valStrs, fmt.Sprintf("[%s=%+v] ", key, valueMap[key]))
+	}
+
+	fmt.Println(strings.Join(valStrs, ""))
+
+	// Output: [key1=val1] [key2=val2]
 }
 
 func ExampleWithStack() {
