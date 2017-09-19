@@ -225,8 +225,9 @@ type withMessage struct {
 	msg   string
 }
 
-func (w *withMessage) Error() string { return w.msg + ": " + w.cause.Error() }
-func (w *withMessage) Cause() error  { return w.cause }
+func (w *withMessage) Error() string   { return w.msg + ": " + w.cause.Error() }
+func (w *withMessage) Cause() error    { return w.cause }
+func (w *withMessage) Message() string { return w.msg }
 
 func (w *withMessage) Format(s fmt.State, verb rune) {
 	switch verb {
@@ -266,4 +267,31 @@ func Cause(err error) error {
 		err = cause.Cause()
 	}
 	return err
+}
+
+// Message returns the outermost message string of the specified error stack without
+// concatenating the cause string only if the error is a wrapper with message,
+// else the string result of Error() function is returned.
+func Message(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	type messenger interface {
+		Message() string
+	}
+
+	if msg, ok := err.(messenger); ok {
+		return msg.Message()
+	}
+
+	type causer interface {
+		Cause() error
+	}
+
+	if cause, ok := err.(causer); ok {
+		return Message(cause.Cause())
+	}
+
+	return err.Error()
 }

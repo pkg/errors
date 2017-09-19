@@ -223,3 +223,31 @@ func TestErrorEquality(t *testing.T) {
 		}
 	}
 }
+
+func TestMessage(t *testing.T) {
+	tests := []struct {
+		err  error
+		want string
+	}{{
+		err:  nil,
+		want: "",
+	}, {
+		err:  New("whoops"),
+		want: "whoops",
+	}, {
+		err:  Wrap(New("main reason"), "whoops"),
+		want: "whoops",
+	}, {
+		err:  WithMessage(New("main reason"), "whoops"),
+		want: "whoops",
+	}, {
+		err:  WithStack(WithMessage(New("main reason"), "whoops")),
+		want: "whoops",
+	}}
+
+	for i, tt := range tests {
+		if got := Message(tt.err); tt.want != got {
+			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
+		}
+	}
+}
