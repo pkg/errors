@@ -47,6 +47,6 @@ We welcome pull requests, bug fixes and issue reports. With that said, the bar f
 
 Before proposing a change, please discuss your change by raising an issue.
 
-## Licence
+## License
 
 BSD-2-Clause
