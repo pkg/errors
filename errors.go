@@ -38,8 +38,9 @@
 //     }
 //
 // can be inspected by errors.Cause. errors.Cause will recursively retrieve
-// the topmost error which does not implement causer, which is assumed to be
-// the original cause. For example:
+// the topmost error which does not implement causer (which is assumed to be
+// the original cause), or the error which returns nil or itself as the cause.
+// For example:
 //
 //     switch err := errors.Cause(err).(type) {
 //     case *MyError:
@@ -250,9 +251,8 @@ func (w *withMessage) Format(s fmt.State, verb rune) {
 //            Cause() error
 //     }
 //
-// If the error does not implement Cause, the original error will
-// be returned. If the error is nil, nil will be returned without further
-// investigation.
+// An underlying cause is one which does not implement clause,
+// or one which returns nil or itself as the cause.
 func Cause(err error) error {
 	type causer interface {
 		Cause() error
@@ -261,9 +261,13 @@ func Cause(err error) error {
 	for err != nil {
 		cause, ok := err.(causer)
 		if !ok {
-			break
+			return err
 		}
-		err = cause.Cause()
+		errCause := cause.Cause()
+		if errCause == nil || errCause == err {
+			return err
+		}
+		err = errCause
 	}
 	return err
 }
