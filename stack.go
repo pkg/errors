@@ -68,8 +68,12 @@ func (f Frame) Format(s fmt.State, verb rune) {
 	case 'd':
 		fmt.Fprintf(s, "%d", f.line())
 	case 'n':
-		name := runtime.FuncForPC(f.pc()).Name()
-		io.WriteString(s, funcname(name))
+		fn := runtime.FuncForPC(f.pc())
+		if fn == nil {
+			io.WriteString(s, "unknown")
+		} else {
+			io.WriteString(s, funcname(fn.Name()))
+		}
 	case 'v':
 		f.Format(s, 's')
 		io.WriteString(s, ":")
