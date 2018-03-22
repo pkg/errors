@@ -33,7 +33,7 @@ func TestFrameLine(t *testing.T) {
 	}}
 
 	for _, tt := range tests {
-		got := tt.Frame.line()
+		got := tt.Frame.Line()
 		want := tt.want
 		if want != got {
 			t.Errorf("Frame(%v): want: %v, got: %v", uintptr(tt.Frame), want, got)

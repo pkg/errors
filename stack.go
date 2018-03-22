@@ -11,13 +11,18 @@ import (
 // Frame represents a program counter inside a stack frame.
 type Frame uintptr
 
+// Name returns the name of function for this Frame's pc.
+func (f Frame) Name() string {
+	return funcname(runtime.FuncForPC(f.pc()).Name())
+}
+
 // pc returns the program counter for this frame;
 // multiple frames may have the same PC value.
 func (f Frame) pc() uintptr { return uintptr(f) - 1 }
 
-// file returns the full path to the file that contains the
+// File returns the full path to the file that contains the
 // function for this Frame's pc.
-func (f Frame) file() string {
+func (f Frame) File() string {
 	fn := runtime.FuncForPC(f.pc())
 	if fn == nil {
 		return "unknown"
@@ -26,9 +31,9 @@ func (f Frame) file() string {
 	return file
 }
 
-// line returns the line number of source code of the
+// Line returns the line number of source code of the
 // function for this Frame's pc.
-func (f Frame) line() int {
+func (f Frame) Line() int {
 	fn := runtime.FuncForPC(f.pc())
 	if fn == nil {
 		return 0
@@ -63,13 +68,12 @@ func (f Frame) Format(s fmt.State, verb rune) {
 				fmt.Fprintf(s, "%s\n\t%s", fn.Name(), file)
 			}
 		default:
-			io.WriteString(s, path.Base(f.file()))
+			io.WriteString(s, path.Base(f.File()))
 		}
 	case 'd':
-		fmt.Fprintf(s, "%d", f.line())
+		fmt.Fprintf(s, "%d", f.Line())
 	case 'n':
-		name := runtime.FuncForPC(f.pc()).Name()
-		io.WriteString(s, funcname(name))
+		io.WriteString(s, f.Name())
 	case 'v':
 		f.Format(s, 's')
 		io.WriteString(s, ":")

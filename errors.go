@@ -267,3 +267,42 @@ func Cause(err error) error {
 	}
 	return err
 }
+
+// Trace returns the underlying stack trace of the error, if possible.
+// An error value has a stack trace if it implements the following
+// interface:
+//
+//     type stackTracer interface {
+//            StackTrace() errors.StackTrace
+//     }
+//
+// If the error does not implement StackTrace, nil will be returned.
+// If the error is nil, nil will be returned without further
+// investigation.
+func Trace(err error) (frames []Frame) {
+	if err == nil {
+		return nil
+	}
+
+	type stackTracer interface {
+		StackTrace() StackTrace
+	}
+
+	type causer interface {
+		Cause() error
+	}
+
+	for err != nil {
+		if stackTrace, ok := err.(stackTracer); ok {
+			frames = ([]Frame)(stackTrace.StackTrace())
+		}
+
+		if cause, ok := err.(causer); ok {
+			err = cause.Cause()
+		} else {
+			break
+		}
+	}
+
+	return
+}
