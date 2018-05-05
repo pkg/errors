@@ -96,9 +96,18 @@ import (
 	"io"
 )
 
+type StackTracer interface {
+	StackTrace() StackTrace
+}
+
+type ErrorWithStackTrace interface {
+	error
+	StackTracer
+}
+
 // New returns an error with the supplied message.
 // New also records the stack trace at the point it was called.
-func New(message string) error {
+func New(message string) ErrorWithStackTrace {
 	return &fundamental{
 		msg:   message,
 		stack: callers(),
@@ -108,7 +117,7 @@ func New(message string) error {
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 // Errorf also records the stack trace at the point it was called.
-func Errorf(format string, args ...interface{}) error {
+func Errorf(format string, args ...interface{}) ErrorWithStackTrace {
 	return &fundamental{
 		msg:   fmt.Sprintf(format, args...),
 		stack: callers(),
@@ -141,7 +150,7 @@ func (f *fundamental) Format(s fmt.State, verb rune) {
 
 // WithStack annotates err with a stack trace at the point WithStack was called.
 // If err is nil, WithStack returns nil.
-func WithStack(err error) error {
+func WithStack(err error) ErrorWithStackTrace {
 	if err == nil {
 		return nil
 	}
@@ -177,7 +186,7 @@ func (w *withStack) Format(s fmt.State, verb rune) {
 // Wrap returns an error annotating err with a stack trace
 // at the point Wrap is called, and the supplied message.
 // If err is nil, Wrap returns nil.
-func Wrap(err error, message string) error {
+func Wrap(err error, message string) ErrorWithStackTrace {
 	if err == nil {
 		return nil
 	}
@@ -194,7 +203,7 @@ func Wrap(err error, message string) error {
 // Wrapf returns an error annotating err with a stack trace
 // at the point Wrapf is call, and the format specifier.
 // If err is nil, Wrapf returns nil.
-func Wrapf(err error, format string, args ...interface{}) error {
+func Wrapf(err error, format string, args ...interface{}) ErrorWithStackTrace {
 	if err == nil {
 		return nil
 	}
