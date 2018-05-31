@@ -101,7 +101,7 @@ import (
 func New(message string) error {
 	return &fundamental{
 		msg:   message,
-		stack: callers(),
+		stack: callers(0),
 	}
 }
 
@@ -111,7 +111,7 @@ func New(message string) error {
 func Errorf(format string, args ...interface{}) error {
 	return &fundamental{
 		msg:   fmt.Sprintf(format, args...),
-		stack: callers(),
+		stack: callers(0),
 	}
 }
 
@@ -147,7 +147,19 @@ func WithStack(err error) error {
 	}
 	return &withStack{
 		err,
-		callers(),
+		callers(0),
+	}
+}
+
+// WithStackSkip annotates err with a stack trace at the point WithStackSkip was called minus skip stack frames.
+// If err is nil, WithStackSkip returns nil.
+func WithStackSkip(skip int, err error) error {
+	if err == nil {
+		return nil
+	}
+	return &withStack{
+		err,
+		callers(skip),
 	}
 }
 
@@ -187,7 +199,24 @@ func Wrap(err error, message string) error {
 	}
 	return &withStack{
 		err,
-		callers(),
+		callers(0),
+	}
+}
+
+// WrapSkip returns an error annotating err with a stack trace
+// at the point WrapSkip is called minus skip stack frames, and the supplied message.
+// If err is nil, WrapSkip returns nil.
+func WrapSkip(skip int, err error, message string) error {
+	if err == nil {
+		return nil
+	}
+	err = &withMessage{
+		cause: err,
+		msg:   message,
+	}
+	return &withStack{
+		err,
+		callers(skip),
 	}
 }
 
@@ -204,7 +233,24 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	}
 	return &withStack{
 		err,
-		callers(),
+		callers(0),
+	}
+}
+
+// WrapfSkip returns an error annotating err with a stack trace
+// at the point WrapfSkip is called minus skip stack frames, and the format specifier.
+// If err is nil, WrapfSkip returns nil.
+func WrapfSkip(skip int, err error, format string, args ...interface{}) error {
+	if err == nil {
+		return nil
+	}
+	err = &withMessage{
+		cause: err,
+		msg:   fmt.Sprintf(format, args...),
+	}
+	return &withStack{
+		err,
+		callers(skip),
 	}
 }
 
