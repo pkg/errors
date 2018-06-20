@@ -195,17 +195,7 @@ func Wrap(err error, message string) error {
 // at the point Wrapf is call, and the format specifier.
 // If err is nil, Wrapf returns nil.
 func Wrapf(err error, format string, args ...interface{}) error {
-	if err == nil {
-		return nil
-	}
-	err = &withMessage{
-		cause: err,
-		msg:   fmt.Sprintf(format, args...),
-	}
-	return &withStack{
-		err,
-		callers(),
-	}
+	return Wrap(err, fmt.Sprintf(format, args...))
 }
 
 // WithMessage annotates err with a new message.
