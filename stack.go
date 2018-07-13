@@ -52,8 +52,7 @@ func (f Frame) line() int {
 func (f Frame) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		switch {
-		case s.Flag('+'):
+		if s.Flag('+') {
 			pc := f.pc()
 			fn := runtime.FuncForPC(pc)
 			if fn == nil {
@@ -62,7 +61,7 @@ func (f Frame) Format(s fmt.State, verb rune) {
 				file, _ := fn.FileLine(pc)
 				fmt.Fprintf(s, "%s\n\t%s", fn.Name(), file)
 			}
-		default:
+		} else {
 			io.WriteString(s, path.Base(f.file()))
 		}
 	case 'd':
@@ -112,8 +111,7 @@ type stack []uintptr
 func (s *stack) Format(st fmt.State, verb rune) {
 	switch verb {
 	case 'v':
-		switch {
-		case st.Flag('+'):
+		if st.Flag('+') {
 			for _, pc := range *s {
 				f := Frame(pc)
 				fmt.Fprintf(st, "\n%+v", f)
