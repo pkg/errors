@@ -95,14 +95,14 @@ func TestFormatWrap(t *testing.T) {
 	}, {
 		Wrap(io.EOF, "error"),
 		"%+v",
-		"EOF\n" +
+		"EOF\n" + "=+\n" +
 			"error\n" +
 			"github.com/pkg/errors.TestFormatWrap\n" +
 			"\t.+/github.com/pkg/errors/format_test.go:96",
 	}, {
 		Wrap(Wrap(io.EOF, "error1"), "error2"),
 		"%+v",
-		"EOF\n" +
+		"EOF\n" + "=+\n" +
 			"error1\n" +
 			"github.com/pkg/errors.TestFormatWrap\n" +
 			"\t.+/github.com/pkg/errors/format_test.go:103\n",
@@ -133,7 +133,7 @@ func TestFormatWrapf(t *testing.T) {
 	}, {
 		Wrapf(io.EOF, "error%d", 2),
 		"%+v",
-		"EOF\n" +
+		"EOF\n" + "=+\n" +
 			"error2\n" +
 			"github.com/pkg/errors.TestFormatWrapf\n" +
 			"\t.+/github.com/pkg/errors/format_test.go:134",
@@ -408,6 +408,9 @@ func parseBlocks(input string, detectStackboundaries bool) ([]string, error) {
 	lines := map[string]bool{} // already found lines
 
 	for _, l := range strings.Split(input, "\n") {
+		if l == "====================" {
+			continue
+		}
 		isStackLine := stackLineR.MatchString(l)
 
 		switch {
