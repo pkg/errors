@@ -9,8 +9,8 @@ import (
 // Combination combines multiple errors into one.
 // The Error method returns the strings from the individual Error methods
 // joined by the new line character '\n'.
-// Combination always at least one error and returns the first error
-// as restult of the Cause method.
+// Combination always has at least one error and returns the first error
+// as result of the Cause method.
 type Combination struct {
 	errs []error
 	*stack
@@ -20,7 +20,9 @@ type Combination struct {
 // or the callstack wrapped error if only one error was passed,
 // or nil if zero arguments are passed or all passed errors are nil.
 // Any returned non nil error will be wrapped with a callstack,
-// independent if it's a single error or a Combination.
+// independent if it's a single error or a Combination type is returned.
+// The Combination type's Error method returns the strings from the individual Error methods
+// joined by the new line character '\n'.
 func Combine(errs ...error) error {
 	switch len(errs) {
 	case 0:
