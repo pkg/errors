@@ -17,7 +17,7 @@ type Combination struct {
 }
 
 // Combine returns a Combination error for 2 or more errors which are not nil,
-// or the unmodified error if only one error was passed,
+// or the callstack wrapped error if only one error was passed,
 // or nil if zero arguments are passed or all passed errors are nil.
 // Any returned non nil error will be wrapped with a callstack,
 // independent if it's a single error or a Combination.
