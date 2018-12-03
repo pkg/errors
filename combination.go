@@ -20,7 +20,7 @@ type Combination struct {
 // or the callstack wrapped error if only one error was passed,
 // or nil if zero arguments are passed or all passed errors are nil.
 // Any returned non nil error will be wrapped with a callstack,
-// independent if it's a single error or a Combination type is returned.
+// independent if a single error or a Combination type is returned.
 // The Combination type's Error method returns the strings from the
 // individual Error methods joined by the new line character '\n'.
 // Note that Cause(error) can only return a single error,
