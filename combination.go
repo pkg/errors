@@ -64,6 +64,19 @@ func Combine(errs ...error) error {
 	}
 }
 
+// Uncombine returns multible errors if err is a Combination type,
+// or the passed single err if was not a Combination type,
+// or nil if the passed error was nil.
+func Uncombine(err error) []error {
+	if err == nil {
+		return nil
+	}
+	if combo, ok := err.(*Combination); ok {
+		return combo.errs
+	}
+	return []error{err}
+}
+
 func (c *Combination) Error() string {
 	if len(c.errs) == 1 {
 		return c.errs[0].Error()
@@ -79,8 +92,14 @@ func (c *Combination) Error() string {
 	return b.String()
 }
 
-func (c *Combination) Errs() []error {
+func (c *Combination) Errors() []error {
 	return c.errs
+}
+
+func (c *Combination) Append(err error) {
+	if err != nil {
+		c.errs = append(c.errs, WithStackSkip(1, err))
+	}
 }
 
 func (c *Combination) Cause() error {
