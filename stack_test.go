@@ -10,12 +10,12 @@ var initpc = caller()
 
 type X struct{}
 
-//go:noinline
+// val returns a Frame pointing to itself.
 func (x X) val() Frame {
 	return caller()
 }
 
-//go:noinline
+// ptr returns a Frame pointing to itself.
 func (x *X) ptr() Frame {
 	return caller()
 }
