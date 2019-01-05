@@ -11,10 +11,6 @@ import (
 // Frame represents a program counter inside a stack frame.
 type Frame runtime.Frame
 
-// pc returns the program counter for this frame;
-// multiple frames may have the same PC value.
-func (f Frame) pc() uintptr { return runtime.Frame(f).PC }
-
 // file returns the full path to the file that contains the
 // function for this Frame's pc.
 func (f Frame) file() string {
@@ -61,7 +57,7 @@ func (f Frame) Format(s fmt.State, verb rune) {
 	case 'd':
 		fmt.Fprintf(s, "%d", f.line())
 	case 'n':
-		name := runtime.FuncForPC(f.pc()).Name()
+		name := runtime.Frame(f).Function
 		io.WriteString(s, funcname(name))
 	case 'v':
 		f.Format(s, 's')
