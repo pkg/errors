@@ -134,7 +134,7 @@ func TestStackTrace(t *testing.T) {
 		},
 	}, {
 		func() error { noinline(); return New("ooh") }(), []string{
-			`github.com/pkg/errors.(func·009|TestStackTrace.func1)` +
+			`github.com/pkg/errors.TestStackTrace.func1` +
 				"\n\t.+/github.com/pkg/errors/stack_test.go:136", // this is the stack of New
 			"github.com/pkg/errors.TestStackTrace\n" +
 				"\t.+/github.com/pkg/errors/stack_test.go:136", // this is the stack of New's caller
@@ -145,9 +145,9 @@ func TestStackTrace(t *testing.T) {
 				return Errorf("hello %s", fmt.Sprintf("world"))
 			}()
 		}()), []string{
-			`github.com/pkg/errors.(func·010|TestStackTrace.func2.1)` +
+			`github.com/pkg/errors.TestStackTrace.func2.1` +
 				"\n\t.+/github.com/pkg/errors/stack_test.go:145", // this is the stack of Errorf
-			`github.com/pkg/errors.(func·011|TestStackTrace.func2)` +
+			`github.com/pkg/errors.TestStackTrace.func2` +
 				"\n\t.+/github.com/pkg/errors/stack_test.go:146", // this is the stack of Errorf's caller
 			"github.com/pkg/errors.TestStackTrace\n" +
 				"\t.+/github.com/pkg/errors/stack_test.go:147", // this is the stack of Errorf's caller's caller
