@@ -49,7 +49,7 @@ func (f Frame) format(w io.Writer, s fmt.State, verb rune) {
 			if file == "" {
 				file = "unknown"
 			}
-			io.WriteString(s, path.Base(file))
+			io.WriteString(w, path.Base(file))
 		}
 	case 'd':
 		io.WriteString(w, strconv.Itoa(runtime.Frame(f).Line))
