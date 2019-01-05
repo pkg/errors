@@ -9,32 +9,26 @@ import (
 )
 
 // Frame represents a program counter inside a stack frame.
-type Frame uintptr
+type Frame runtime.Frame
 
 // pc returns the program counter for this frame;
 // multiple frames may have the same PC value.
-func (f Frame) pc() uintptr { return uintptr(f) - 1 }
+func (f Frame) pc() uintptr { return runtime.Frame(f).PC }
 
 // file returns the full path to the file that contains the
 // function for this Frame's pc.
 func (f Frame) file() string {
-	fn := runtime.FuncForPC(f.pc())
-	if fn == nil {
+	file := runtime.Frame(f).File
+	if file == "" {
 		return "unknown"
 	}
-	file, _ := fn.FileLine(f.pc())
 	return file
 }
 
 // line returns the line number of source code of the
 // function for this Frame's pc.
 func (f Frame) line() int {
-	fn := runtime.FuncForPC(f.pc())
-	if fn == nil {
-		return 0
-	}
-	_, line := fn.FileLine(f.pc())
-	return line
+	return runtime.Frame(f).Line
 }
 
 // Format formats the frame according to the fmt.Formatter interface.
@@ -54,12 +48,11 @@ func (f Frame) Format(s fmt.State, verb rune) {
 	case 's':
 		switch {
 		case s.Flag('+'):
-			pc := f.pc()
-			fn := runtime.FuncForPC(pc)
+			fn := runtime.Frame(f).Func
 			if fn == nil {
 				io.WriteString(s, "unknown")
 			} else {
-				file, _ := fn.FileLine(pc)
+				file := runtime.Frame(f).File
 				fmt.Fprintf(s, "%s\n\t%s", fn.Name(), file)
 			}
 		default:
@@ -114,20 +107,29 @@ func (s *stack) Format(st fmt.State, verb rune) {
 	case 'v':
 		switch {
 		case st.Flag('+'):
-			for _, pc := range *s {
-				f := Frame(pc)
-				fmt.Fprintf(st, "\n%+v", f)
+			frames := runtime.CallersFrames(*s)
+			for {
+				frame, more := frames.Next()
+				fmt.Fprintf(st, "\n%+v", Frame(frame))
+				if !more {
+					break
+				}
 			}
 		}
 	}
 }
 
 func (s *stack) StackTrace() StackTrace {
-	f := make([]Frame, len(*s))
-	for i := 0; i < len(f); i++ {
-		f[i] = Frame((*s)[i])
+	var st []Frame
+	frames := runtime.CallersFrames(*s)
+	for {
+		frame, more := frames.Next()
+		st = append(st, Frame(frame))
+		if !more {
+			break
+		}
 	}
-	return f
+	return st
 }
 
 func callers() *stack {
