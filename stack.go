@@ -11,22 +11,6 @@ import (
 // Frame represents a program counter inside a stack frame.
 type Frame runtime.Frame
 
-// file returns the full path to the file that contains the
-// function for this Frame's pc.
-func (f Frame) file() string {
-	file := runtime.Frame(f).File
-	if file == "" {
-		return "unknown"
-	}
-	return file
-}
-
-// line returns the line number of source code of the
-// function for this Frame's pc.
-func (f Frame) line() int {
-	return runtime.Frame(f).Line
-}
-
 // Format formats the frame according to the fmt.Formatter interface.
 //
 //    %s    source file
@@ -52,10 +36,14 @@ func (f Frame) Format(s fmt.State, verb rune) {
 				fmt.Fprintf(s, "%s\n\t%s", fn.Name(), file)
 			}
 		default:
-			io.WriteString(s, path.Base(f.file()))
+			file := runtime.Frame(f).File
+			if file == "" {
+				file = "unknown"
+			}
+			io.WriteString(s, path.Base(file))
 		}
 	case 'd':
-		fmt.Fprintf(s, "%d", f.line())
+		fmt.Fprintf(s, "%d", runtime.Frame(f).Line)
 	case 'n':
 		name := runtime.Frame(f).Function
 		io.WriteString(s, funcname(name))
