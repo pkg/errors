@@ -1,41 +1,17 @@
 package errors
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
 // Frame represents a program counter inside a stack frame.
-type Frame uintptr
-
-// pc returns the program counter for this frame;
-// multiple frames may have the same PC value.
-func (f Frame) pc() uintptr { return uintptr(f) - 1 }
-
-// file returns the full path to the file that contains the
-// function for this Frame's pc.
-func (f Frame) file() string {
-	fn := runtime.FuncForPC(f.pc())
-	if fn == nil {
-		return "unknown"
-	}
-	file, _ := fn.FileLine(f.pc())
-	return file
-}
-
-// line returns the line number of source code of the
-// function for this Frame's pc.
-func (f Frame) line() int {
-	fn := runtime.FuncForPC(f.pc())
-	if fn == nil {
-		return 0
-	}
-	_, line := fn.FileLine(f.pc())
-	return line
-}
+type Frame runtime.Frame
 
 // Format formats the frame according to the fmt.Formatter interface.
 //
@@ -50,30 +26,39 @@ func (f Frame) line() int {
 //          GOPATH separated by \n\t (<funcname>\n\t<path>)
 //    %+v   equivalent to %+s:%d
 func (f Frame) Format(s fmt.State, verb rune) {
+	f.format(s, s, verb)
+}
+
+// format allows stack trace printing calls to be made with a bytes.Buffer.
+func (f Frame) format(w io.Writer, s fmt.State, verb rune) {
 	switch verb {
 	case 's':
 		switch {
 		case s.Flag('+'):
-			pc := f.pc()
-			fn := runtime.FuncForPC(pc)
+			fn := f.Func
 			if fn == nil {
-				io.WriteString(s, "unknown")
+				io.WriteString(w, "unknown")
 			} else {
-				file, _ := fn.FileLine(pc)
-				fmt.Fprintf(s, "%s\n\t%s", fn.Name(), file)
+				io.WriteString(w, fn.Name())
+				io.WriteString(w, "\n\t")
+				io.WriteString(w, f.File)
 			}
 		default:
-			io.WriteString(s, path.Base(f.file()))
+			file := f.File
+			if file == "" {
+				file = "unknown"
+			}
+			io.WriteString(w, path.Base(file))
 		}
 	case 'd':
-		fmt.Fprintf(s, "%d", f.line())
+		io.WriteString(w, strconv.Itoa(f.Line))
 	case 'n':
-		name := runtime.FuncForPC(f.pc()).Name()
+		name := f.Function
 		io.WriteString(s, funcname(name))
 	case 'v':
-		f.Format(s, 's')
-		io.WriteString(s, ":")
-		f.Format(s, 'd')
+		f.format(w, s, 's')
+		io.WriteString(w, ":")
+		f.format(w, s, 'd')
 	}
 }
 
@@ -89,22 +74,49 @@ type StackTrace []Frame
 //
 //    %+v   Prints filename, function, and line number for each Frame in the stack.
 func (st StackTrace) Format(s fmt.State, verb rune) {
+	var b bytes.Buffer
 	switch verb {
 	case 'v':
 		switch {
 		case s.Flag('+'):
-			for _, f := range st {
-				fmt.Fprintf(s, "\n%+v", f)
+			b.Grow(len(st) * stackMinLen)
+			for _, fr := range st {
+				b.WriteByte('\n')
+				fr.format(&b, s, verb)
 			}
 		case s.Flag('#'):
-			fmt.Fprintf(s, "%#v", []Frame(st))
+			fmt.Fprintf(&b, "%#v", []Frame(st))
 		default:
-			fmt.Fprintf(s, "%v", []Frame(st))
+			st.formatSlice(&b, s, verb)
 		}
 	case 's':
-		fmt.Fprintf(s, "%s", []Frame(st))
+		st.formatSlice(&b, s, verb)
 	}
+	io.Copy(s, &b)
 }
+
+// formatSlice will format this StackTrace into the given buffer as a slice of
+// Frame, only valid when called with '%s' or '%v'.
+func (st StackTrace) formatSlice(b *bytes.Buffer, s fmt.State, verb rune) {
+	b.WriteByte('[')
+	if len(st) == 0 {
+		b.WriteByte(']')
+		return
+	}
+
+	b.Grow(len(st) * (stackMinLen / 4))
+	st[0].format(b, s, verb)
+	for _, fr := range st[1:] {
+		b.WriteByte(' ')
+		fr.format(b, s, verb)
+	}
+	b.WriteByte(']')
+}
+
+// stackMinLen is a best-guess at the minimum length of a stack trace. It
+// doesn't need to be exact, just give a good enough head start for the buffer
+// to avoid the expensive early growth.
+const stackMinLen = 96
 
 // stack represents a stack of program counters.
 type stack []uintptr
@@ -114,20 +126,29 @@ func (s *stack) Format(st fmt.State, verb rune) {
 	case 'v':
 		switch {
 		case st.Flag('+'):
-			for _, pc := range *s {
-				f := Frame(pc)
-				fmt.Fprintf(st, "\n%+v", f)
+			frames := runtime.CallersFrames(*s)
+			for {
+				frame, more := frames.Next()
+				fmt.Fprintf(st, "\n%+v", Frame(frame))
+				if !more {
+					break
+				}
 			}
 		}
 	}
 }
 
 func (s *stack) StackTrace() StackTrace {
-	f := make([]Frame, len(*s))
-	for i := 0; i < len(f); i++ {
-		f[i] = Frame((*s)[i])
+	var st []Frame
+	frames := runtime.CallersFrames(*s)
+	for {
+		frame, more := frames.Next()
+		st = append(st, Frame(frame))
+		if !more {
+			break
+		}
 	}
-	return f
+	return st
 }
 
 func callers() *stack {
