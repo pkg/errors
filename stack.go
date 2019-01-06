@@ -35,26 +35,25 @@ func (f Frame) format(w io.Writer, s fmt.State, verb rune) {
 	case 's':
 		switch {
 		case s.Flag('+'):
-			fn := runtime.Frame(f).Func
+			fn := f.Func
 			if fn == nil {
 				io.WriteString(w, "unknown")
 			} else {
-				file := runtime.Frame(f).File
 				io.WriteString(w, fn.Name())
 				io.WriteString(w, "\n\t")
-				io.WriteString(w, file)
+				io.WriteString(w, f.File)
 			}
 		default:
-			file := runtime.Frame(f).File
+			file := f.File
 			if file == "" {
 				file = "unknown"
 			}
 			io.WriteString(w, path.Base(file))
 		}
 	case 'd':
-		io.WriteString(w, strconv.Itoa(runtime.Frame(f).Line))
+		io.WriteString(w, strconv.Itoa(f.Line))
 	case 'n':
-		name := runtime.Frame(f).Function
+		name := f.Function
 		io.WriteString(s, funcname(name))
 	case 'v':
 		f.format(w, s, 's')
