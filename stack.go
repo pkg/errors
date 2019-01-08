@@ -35,11 +35,10 @@ func (f Frame) format(w io.Writer, s fmt.State, verb rune) {
 	case 's':
 		switch {
 		case s.Flag('+'):
-			fn := f.Func
-			if fn == nil {
+			if f.Function == "" {
 				io.WriteString(w, "unknown")
 			} else {
-				io.WriteString(w, fn.Name())
+				io.WriteString(w, f.Function)
 				io.WriteString(w, "\n\t")
 				io.WriteString(w, f.File)
 			}
