@@ -133,7 +133,7 @@ func TestStackTrace(t *testing.T) {
 				"\t.+/github.com/pkg/errors/stack_test.go:131", // this is the stack of New
 		},
 	}, {
-		func() error { noinline(); return New("ooh") }(), []string{
+		func() error { return New("ooh") }(), []string{
 			`github.com/pkg/errors.TestStackTrace.func1` +
 				"\n\t.+/github.com/pkg/errors/stack_test.go:136", // this is the stack of New
 			"github.com/pkg/errors.TestStackTrace\n" +
@@ -248,7 +248,3 @@ func caller() Frame {
 	frame, _ := frames.Next()
 	return Frame(frame.PC)
 }
-
-//go:noinline
-// noinline prevents the caller being inlined
-func noinline() {}
