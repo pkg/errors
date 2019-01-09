@@ -35,11 +35,11 @@ func TestFrameFormat(t *testing.T) {
 		"github.com/pkg/errors.init\n" +
 			"\t.+/github.com/pkg/errors/stack_test.go",
 	}, {
-		Frame{},
+		0,
 		"%s",
 		"unknown",
 	}, {
-		Frame{},
+		0,
 		"%+s",
 		"unknown",
 	}, {
@@ -47,7 +47,7 @@ func TestFrameFormat(t *testing.T) {
 		"%d",
 		"9",
 	}, {
-		Frame{},
+		0,
 		"%d",
 		"0",
 	}, {
@@ -69,7 +69,7 @@ func TestFrameFormat(t *testing.T) {
 		"%n",
 		"X.val",
 	}, {
-		Frame{},
+		0,
 		"%n",
 		"",
 	}, {
@@ -82,7 +82,7 @@ func TestFrameFormat(t *testing.T) {
 		"github.com/pkg/errors.init\n" +
 			"\t.+/github.com/pkg/errors/stack_test.go:9",
 	}, {
-		Frame{},
+		0,
 		"%v",
 		"unknown:0",
 	}}
@@ -246,7 +246,7 @@ func caller() Frame {
 	n := runtime.Callers(2, pcs[:])
 	frames := runtime.CallersFrames(pcs[:n])
 	frame, _ := frames.Next()
-	return Frame(frame)
+	return Frame(frame.PC)
 }
 
 //go:noinline
