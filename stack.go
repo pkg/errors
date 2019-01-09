@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"path"
@@ -98,22 +99,49 @@ type StackTrace []Frame
 //
 //    %+v   Prints filename, function, and line number for each Frame in the stack.
 func (st StackTrace) Format(s fmt.State, verb rune) {
+	var b bytes.Buffer
 	switch verb {
 	case 'v':
 		switch {
 		case s.Flag('+'):
+			b.Grow(len(st) * stackMinLen)
 			for _, f := range st {
-				fmt.Fprintf(s, "\n%+v", f)
+				b.WriteByte('\n')
+				f.format(&b, s, verb)
 			}
 		case s.Flag('#'):
-			fmt.Fprintf(s, "%#v", []Frame(st))
+			fmt.Fprintf(&b, "%#v", []Frame(st))
 		default:
-			fmt.Fprintf(s, "%v", []Frame(st))
+			st.formatSlice(&b, s, verb)
 		}
 	case 's':
-		fmt.Fprintf(s, "%s", []Frame(st))
+		st.formatSlice(&b, s, verb)
 	}
+	io.Copy(s, &b)
 }
+
+// formatSlice will format this StackTrace into the given buffer as a slice of
+// Frame, only valid when called with '%s' or '%v'.
+func (st StackTrace) formatSlice(b *bytes.Buffer, s fmt.State, verb rune) {
+	b.WriteByte('[')
+	if len(st) == 0 {
+		b.WriteByte(']')
+		return
+	}
+
+	b.Grow(len(st) * (stackMinLen / 4))
+	st[0].format(b, s, verb)
+	for _, fr := range st[1:] {
+		b.WriteByte(' ')
+		fr.format(b, s, verb)
+	}
+	b.WriteByte(']')
+}
+
+// stackMinLen is a best-guess at the minimum length of a stack trace. It
+// doesn't need to be exact, just give a good enough head start for the buffer
+// to avoid the expensive early growth.
+const stackMinLen = 96
 
 // stack represents a stack of program counters.
 type stack []uintptr
