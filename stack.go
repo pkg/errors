@@ -11,7 +11,42 @@ import (
 )
 
 // Frame represents a program counter inside a stack frame.
-type Frame runtime.Frame
+type Frame uintptr
+
+// pc returns the program counter for this frame;
+// multiple frames may have the same PC value.
+func (f Frame) pc() uintptr { return uintptr(f) - 1 }
+
+// file returns the full path to the file that contains the
+// function for this Frame's pc.
+func (f Frame) file() string {
+	fn := runtime.FuncForPC(f.pc())
+	if fn == nil {
+		return "unknown"
+	}
+	file, _ := fn.FileLine(f.pc())
+	return file
+}
+
+// line returns the line number of source code of the
+// function for this Frame's pc.
+func (f Frame) line() int {
+	fn := runtime.FuncForPC(f.pc())
+	if fn == nil {
+		return 0
+	}
+	_, line := fn.FileLine(f.pc())
+	return line
+}
+
+// name returns the name of this function, if known.
+func (f Frame) name() string {
+	fn := runtime.FuncForPC(f.pc())
+	if fn == nil {
+		return "unknown"
+	}
+	return fn.Name()
+}
 
 // Format formats the frame according to the fmt.Formatter interface.
 //
@@ -35,25 +70,16 @@ func (f Frame) format(w io.Writer, s fmt.State, verb rune) {
 	case 's':
 		switch {
 		case s.Flag('+'):
-			if f.Function == "" {
-				io.WriteString(w, "unknown")
-			} else {
-				io.WriteString(w, f.Function)
-				io.WriteString(w, "\n\t")
-				io.WriteString(w, f.File)
-			}
+			io.WriteString(w, f.name())
+			io.WriteString(w, "\n\t")
+			io.WriteString(w, f.file())
 		default:
-			file := f.File
-			if file == "" {
-				file = "unknown"
-			}
-			io.WriteString(w, path.Base(file))
+			io.WriteString(w, path.Base(f.file()))
 		}
 	case 'd':
-		io.WriteString(w, strconv.Itoa(f.Line))
+		io.WriteString(w, strconv.Itoa(f.line()))
 	case 'n':
-		name := f.Function
-		io.WriteString(s, funcname(name))
+		io.WriteString(w, funcname(f.name()))
 	case 'v':
 		f.format(w, s, 's')
 		io.WriteString(w, ":")
@@ -79,9 +105,9 @@ func (st StackTrace) Format(s fmt.State, verb rune) {
 		switch {
 		case s.Flag('+'):
 			b.Grow(len(st) * stackMinLen)
-			for _, fr := range st {
+			for _, f := range st {
 				b.WriteByte('\n')
-				fr.format(&b, s, verb)
+				f.format(&b, s, verb)
 			}
 		case s.Flag('#'):
 			fmt.Fprintf(&b, "%#v", []Frame(st))
@@ -125,29 +151,20 @@ func (s *stack) Format(st fmt.State, verb rune) {
 	case 'v':
 		switch {
 		case st.Flag('+'):
-			frames := runtime.CallersFrames(*s)
-			for {
-				frame, more := frames.Next()
-				fmt.Fprintf(st, "\n%+v", Frame(frame))
-				if !more {
-					break
-				}
+			for _, pc := range *s {
+				f := Frame(pc)
+				fmt.Fprintf(st, "\n%+v", f)
 			}
 		}
 	}
 }
 
 func (s *stack) StackTrace() StackTrace {
-	var st []Frame
-	frames := runtime.CallersFrames(*s)
-	for {
-		frame, more := frames.Next()
-		st = append(st, Frame(frame))
-		if !more {
-			break
-		}
+	f := make([]Frame, len(*s))
+	for i := 0; i < len(f); i++ {
+		f[i] = Frame((*s)[i])
 	}
-	return st
+	return f
 }
 
 func callers() *stack {
