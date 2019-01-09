@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"path"
@@ -11,6 +10,8 @@ import (
 )
 
 // Frame represents a program counter inside a stack frame.
+// For historical reasons if Frame is interpreted as a uintptr
+// its value represents the program counter + 1.
 type Frame uintptr
 
 // pc returns the program counter for this frame;
@@ -61,29 +62,24 @@ func (f Frame) name() string {
 //          GOPATH separated by \n\t (<funcname>\n\t<path>)
 //    %+v   equivalent to %+s:%d
 func (f Frame) Format(s fmt.State, verb rune) {
-	f.format(s, s, verb)
-}
-
-// format allows stack trace printing calls to be made with a bytes.Buffer.
-func (f Frame) format(w io.Writer, s fmt.State, verb rune) {
 	switch verb {
 	case 's':
 		switch {
 		case s.Flag('+'):
-			io.WriteString(w, f.name())
-			io.WriteString(w, "\n\t")
-			io.WriteString(w, f.file())
+			io.WriteString(s, f.name())
+			io.WriteString(s, "\n\t")
+			io.WriteString(s, f.file())
 		default:
-			io.WriteString(w, path.Base(f.file()))
+			io.WriteString(s, path.Base(f.file()))
 		}
 	case 'd':
-		io.WriteString(w, strconv.Itoa(f.line()))
+		io.WriteString(s, strconv.Itoa(f.line()))
 	case 'n':
-		io.WriteString(w, funcname(f.name()))
+		io.WriteString(s, funcname(f.name()))
 	case 'v':
-		f.format(w, s, 's')
-		io.WriteString(w, ":")
-		f.format(w, s, 'd')
+		f.Format(s, 's')
+		io.WriteString(s, ":")
+		f.Format(s, 'd')
 	}
 }
 
@@ -99,49 +95,36 @@ type StackTrace []Frame
 //
 //    %+v   Prints filename, function, and line number for each Frame in the stack.
 func (st StackTrace) Format(s fmt.State, verb rune) {
-	var b bytes.Buffer
 	switch verb {
 	case 'v':
 		switch {
 		case s.Flag('+'):
-			b.Grow(len(st) * stackMinLen)
 			for _, f := range st {
-				b.WriteByte('\n')
-				f.format(&b, s, verb)
+				io.WriteString(s, "\n")
+				f.Format(s, verb)
 			}
 		case s.Flag('#'):
-			fmt.Fprintf(&b, "%#v", []Frame(st))
+			fmt.Fprintf(s, "%#v", []Frame(st))
 		default:
-			st.formatSlice(&b, s, verb)
+			st.formatSlice(s, verb)
 		}
 	case 's':
-		st.formatSlice(&b, s, verb)
+		st.formatSlice(s, verb)
 	}
-	io.Copy(s, &b)
 }
 
 // formatSlice will format this StackTrace into the given buffer as a slice of
 // Frame, only valid when called with '%s' or '%v'.
-func (st StackTrace) formatSlice(b *bytes.Buffer, s fmt.State, verb rune) {
-	b.WriteByte('[')
-	if len(st) == 0 {
-		b.WriteByte(']')
-		return
+func (st StackTrace) formatSlice(s fmt.State, verb rune) {
+	io.WriteString(s, "[")
+	for i, f := range st {
+		if i > 0 {
+			io.WriteString(s, " ")
+		}
+		f.Format(s, verb)
 	}
-
-	b.Grow(len(st) * (stackMinLen / 4))
-	st[0].format(b, s, verb)
-	for _, fr := range st[1:] {
-		b.WriteByte(' ')
-		fr.format(b, s, verb)
-	}
-	b.WriteByte(']')
+	io.WriteString(s, "]")
 }
-
-// stackMinLen is a best-guess at the minimum length of a stack trace. It
-// doesn't need to be exact, just give a good enough head start for the buffer
-// to avoid the expensive early growth.
-const stackMinLen = 96
 
 // stack represents a stack of program counters.
 type stack []uintptr
