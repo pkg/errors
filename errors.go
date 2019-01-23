@@ -280,3 +280,34 @@ func Cause(err error) error {
 	}
 	return err
 }
+
+// Stack returns the first stack trace of the errors, if possible.
+func Stack(err error) StackTrace {
+	type causer interface {
+		Cause() error
+	}
+
+	type stackTracer interface {
+		StackTrace() StackTrace
+	}
+
+	var stackErr error
+
+	for {
+		if _, ok := err.(stackTracer); ok {
+			stackErr = err
+		}
+
+		if causer, ok := err.(causer); ok {
+			err = causer.Cause()
+		} else {
+			break
+		}
+	}
+
+	if stackErr != nil {
+		return stackErr.(stackTracer).StackTrace()
+	}
+
+	return nil
+}

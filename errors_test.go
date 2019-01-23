@@ -106,6 +106,54 @@ func TestCause(t *testing.T) {
 	}
 }
 
+func TestStack(t *testing.T) {
+	x := New("error")
+	y := WithStack(x).(*withStack).StackTrace()
+
+	tests := []struct {
+		err  error
+		want StackTrace
+	}{
+		{
+			err:  nil,
+			want: nil,
+		}, {
+			err:  (error)(nil),
+			want: nil,
+		}, {
+			err:  WithStack(io.EOF),
+			want: y,
+		}, {
+			err:  WithStack(WithStack(io.EOF)),
+			want: y,
+		}, {
+			err:  Wrap(WithStack(WithStack(io.EOF)), "test wrap"),
+			want: y,
+		}, {
+			err:  Cause(Wrap(WithStack(WithStack(io.EOF)), "test wrap")),
+			want: y,
+		}, {
+			err:  Cause(Cause(Wrap(WithStack(WithStack(io.EOF)), "test wrap"))),
+			want: y,
+		},
+	}
+
+	for i, tt := range tests {
+		got := Stack(tt.err)
+		if got == nil || tt.want == nil {
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
+			}
+
+			return
+		}
+
+		if !reflect.DeepEqual(got[0], tt.want[0]) {
+			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
+		}
+	}
+}
+
 func TestWrapfNil(t *testing.T) {
 	got := Wrapf(nil, "no error")
 	if got != nil {
