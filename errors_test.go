@@ -115,9 +115,12 @@ func printStack(tracer StackTrace) string {
 }
 
 func TestStack(t *testing.T) {
+	type stackTracer interface {
+		StackTrace() StackTrace
+	}
 
-	x := WithStack(New("error"))
-	y := x.(*withStack).StackTrace()
+	x := New("error")
+	y := x.(stackTracer).StackTrace()
 
 	tests := []struct {
 		err  error
@@ -130,6 +133,9 @@ func TestStack(t *testing.T) {
 			err:  (error)(nil),
 			want: nil,
 		}, {
+			err:  io.EOF,
+			want: nil,
+		}, {
 			err:  WithStack(x),
 			want: y,
 		}, {
@@ -140,9 +146,6 @@ func TestStack(t *testing.T) {
 			want: y,
 		}, {
 			err:  Cause(Wrap(WithStack(WithStack(x)), "test wrap")),
-			want: y,
-		}, {
-			err:  Cause(Cause(Wrap(WithStack(WithStack(x)), "test wrap"))),
 			want: y,
 		},
 	}
