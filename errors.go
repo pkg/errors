@@ -291,22 +291,24 @@ func Stack(err error) StackTrace {
 		StackTrace() StackTrace
 	}
 
-	var stackErr error
+	var topStackInfo StackTrace
 
 	for {
-		if _, ok := err.(stackTracer); ok {
-			stackErr = err
+		stackErr, ok := err.(stackTracer)
+		if ok {
+			topStackInfo = stackErr.StackTrace()
 		}
 
-		if causer, ok := err.(causer); ok {
-			err = causer.Cause()
-		} else {
+		causer, ok := err.(causer)
+		if !ok {
 			break
 		}
+
+		err = causer.Cause()
 	}
 
-	if stackErr != nil {
-		return stackErr.(stackTracer).StackTrace()
+	if topStackInfo != nil {
+		return topStackInfo
 	}
 
 	return nil

@@ -106,9 +106,18 @@ func TestCause(t *testing.T) {
 	}
 }
 
+func printStack(tracer StackTrace) string {
+	var logInfo string
+	for _, f := range tracer {
+		logInfo += fmt.Sprintf("%+s:%d ", f, f)
+	}
+	return logInfo
+}
+
 func TestStack(t *testing.T) {
-	x := New("error")
-	y := WithStack(x).(*withStack).StackTrace()
+
+	x := WithStack(New("error"))
+	y := x.(*withStack).StackTrace()
 
 	tests := []struct {
 		err  error
@@ -121,19 +130,19 @@ func TestStack(t *testing.T) {
 			err:  (error)(nil),
 			want: nil,
 		}, {
-			err:  WithStack(io.EOF),
+			err:  WithStack(x),
 			want: y,
 		}, {
-			err:  WithStack(WithStack(io.EOF)),
+			err:  WithStack(WithStack(x)),
 			want: y,
 		}, {
-			err:  Wrap(WithStack(WithStack(io.EOF)), "test wrap"),
+			err:  Wrap(WithStack(WithStack(x)), "test wrap"),
 			want: y,
 		}, {
-			err:  Cause(Wrap(WithStack(WithStack(io.EOF)), "test wrap")),
+			err:  Cause(Wrap(WithStack(WithStack(x)), "test wrap")),
 			want: y,
 		}, {
-			err:  Cause(Cause(Wrap(WithStack(WithStack(io.EOF)), "test wrap"))),
+			err:  Cause(Cause(Wrap(WithStack(WithStack(x)), "test wrap"))),
 			want: y,
 		},
 	}
@@ -145,11 +154,11 @@ func TestStack(t *testing.T) {
 				t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
 			}
 
-			return
+			continue
 		}
 
-		if !reflect.DeepEqual(got[0], tt.want[0]) {
-			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
+		if !reflect.DeepEqual(printStack(got), printStack(tt.want)) {
+			t.Errorf("test %d: got %#v, want %#v", i+1, printStack(got), printStack(tt.want))
 		}
 	}
 }
