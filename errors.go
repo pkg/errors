@@ -285,7 +285,6 @@ func Cause(err error) error {
 // the errors in the chain of Causes. If the error does not implement
 // Cause, the original error will be returned. If the error is nil,
 // nil will be returned without further investigation.
-
 func Stack(err error) StackTrace {
 	type causer interface {
 		Cause() error
