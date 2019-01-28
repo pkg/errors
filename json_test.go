@@ -12,7 +12,7 @@ func TestFrameMarshalJSON(t *testing.T) {
 		want string
 	}{{
 		initpc,
-		`^"github.com/pkg/errors.init .+/github.com/pkg/errors/stack_test.go:\d+"$`,
+		`^"github.com/pkg/errors.init(.ializers)? .+/github.com/pkg/errors/stack_test.go:\d+"$`,
 	}, {
 		0,
 		`^"unknown"$`,
