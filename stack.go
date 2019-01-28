@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"path"
@@ -81,6 +82,18 @@ func (f Frame) Format(s fmt.State, verb rune) {
 		io.WriteString(s, ":")
 		f.Format(s, 'd')
 	}
+}
+
+// MarshalJSON formats a stacktrace Frame for easy inclusion in JSON stack
+// traces. The format is the same as that of fmt.Format("%+v"), but without
+// newlines or tabs.
+func (f Frame) MarshalJSON() ([]byte, error) {
+	name := f.name()
+	if name == "unknown" {
+		return json.Marshal(name)
+	}
+	str := fmt.Sprintf("%s %s:%d", name, f.file(), f.line())
+	return json.Marshal(str)
 }
 
 // StackTrace is stack of Frames from innermost (newest) to outermost (oldest).
