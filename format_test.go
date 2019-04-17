@@ -371,9 +371,9 @@ func TestFormatWrappedNew(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.wrappedNew\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:364\n" +
+			"\t.+/github.com/pkg/errors/format_test.go:361\n" +
 			"github.com/pkg/errors.TestFormatWrappedNew\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:373",
+			"\t.+/github.com/pkg/errors/format_test.go:370",
 	}}
 
 	for i, tt := range tests {
