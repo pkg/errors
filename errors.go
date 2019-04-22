@@ -310,9 +310,5 @@ func Stack(err error) StackTrace {
 		err = causer.Cause()
 	}
 
-	if topStackInfo != nil {
-		return topStackInfo
-	}
-
-	return nil
+	return topStackInfo
 }
