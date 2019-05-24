@@ -106,6 +106,25 @@ func New(message string) error {
 	}
 }
 
+// BaseError provides a wrapper of a fundamental error with stack trace
+// It is used for creation of concrete custom error types
+type BaseError struct {
+	*fundamental
+}
+
+func (e BaseError) Error() string {
+	return e.fundamental.Error()
+}
+
+func new(message string) BaseError {
+	return BaseError{
+		&fundamental{
+			msg:   message,
+			stack: callers(),
+		},
+	}
+}
+
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 // Errorf also records the stack trace at the point it was called.
@@ -122,22 +141,11 @@ type fundamental struct {
 	*stack
 }
 
-func (f *fundamental) Error() string { return f.msg }
+func (f *fundamental) Error() string { return fmt.Sprintf("%+v", f) }
 
 func (f *fundamental) Format(s fmt.State, verb rune) {
-	switch verb {
-	case 'v':
-		if s.Flag('+') {
-			io.WriteString(s, f.msg)
-			f.stack.Format(s, verb)
-			return
-		}
-		fallthrough
-	case 's':
-		io.WriteString(s, f.msg)
-	case 'q':
-		fmt.Fprintf(s, "%q", f.msg)
-	}
+	io.WriteString(s, f.msg)
+	f.stack.Format(s, verb)
 }
 
 // WithStack annotates err with a stack trace at the point WithStack was called.
