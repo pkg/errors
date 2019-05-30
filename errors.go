@@ -119,7 +119,16 @@ func Errorf(format string, args ...interface{}) error {
 // fundamental is an error that has a message and a stack, but no caller.
 type fundamental struct {
 	msg string
+	status int
 	*stack
+}
+
+func (f *fundamental) GetStatus() int {
+	return f.status
+}
+func (f *fundamental) SetStatus(status int) {
+	f.status = status
+	return
 }
 
 func (f *fundamental) Error() string { return f.msg }
