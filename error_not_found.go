@@ -12,6 +12,6 @@ type ErrorNotFound struct {
 // NotFound returns a new instance of ErrorNotFound
 func NotFound(message string) error {
 	return ErrorNotFound{
-		new(fmt.Sprintf("not found :: %s", message)),
+		NewBase(fmt.Sprintf("not found :: %s", message)),
 	}
 }

@@ -116,7 +116,8 @@ func (e BaseError) Error() string {
 	return e.fundamental.Error()
 }
 
-func new(message string) BaseError {
+// NewBase returns an instance of BaseError
+func NewBase(message string) BaseError {
 	return BaseError{
 		&fundamental{
 			msg:   message,

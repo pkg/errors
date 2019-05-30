@@ -10,6 +10,6 @@ type ErrorUnsupportedType struct {
 // UnsupportedType returns a new instance of ErrorUnsupportedType
 func UnsupportedType(message string) error {
 	return ErrorUnsupportedType{
-		new(fmt.Sprintf("unsupported type :: %s", message)),
+		NewBase(fmt.Sprintf("unsupported type :: %s", message)),
 	}
 }

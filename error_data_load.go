@@ -12,6 +12,6 @@ type ErrorDataLoad struct {
 // DataLoad returns a new instance of ErrorDataLoad
 func DataLoad(message string) error {
 	return ErrorDataLoad{
-		new(fmt.Sprintf("data load failed :: %s", message)),
+		NewBase(fmt.Sprintf("data load failed :: %s", message)),
 	}
 }
