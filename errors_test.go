@@ -249,3 +249,30 @@ func TestErrorEquality(t *testing.T) {
 		}
 	}
 }
+
+func TestSetDelimiter(t *testing.T) {
+	tests := []struct {
+		name      string
+		delimiter string
+	}{
+		{"empty delimiter",
+			"",
+		},
+		{"single character delimiter",
+			"|",
+		},
+		{"string delimiter",
+			"delimiter",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			SetDelimiter(tt.delimiter)
+			err := Wrap(New("foo"), "foo")
+			want := "foo" + tt.delimiter + " " + "foo"
+			if err.Error() != want {
+				t.Errorf("Error(): got: %s, want %s", err.Error(), want)
+			}
+		})
+	}
+}

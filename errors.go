@@ -97,6 +97,10 @@ import (
 	"io"
 )
 
+var (
+	delimiter string = ": "
+)
+
 // New returns an error with the supplied message.
 // New also records the stack trace at the point it was called.
 func New(message string) error {
@@ -238,7 +242,7 @@ type withMessage struct {
 	msg   string
 }
 
-func (w *withMessage) Error() string { return w.msg + ": " + w.cause.Error() }
+func (w *withMessage) Error() string { return w.msg + delimiter + w.cause.Error() }
 func (w *withMessage) Cause() error  { return w.cause }
 
 func (w *withMessage) Format(s fmt.State, verb rune) {
@@ -279,4 +283,8 @@ func Cause(err error) error {
 		err = cause.Cause()
 	}
 	return err
+}
+
+func SetDelimiter(d string) {
+	delimiter = d + " "
 }
