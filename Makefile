@@ -5,7 +5,7 @@ GO := go
 check: mod test vet gofmt misspell unconvert staticcheck ineffassign unparam
 
 mod:
-    $(GO) mod download
+	$(GO) mod download
 
 test: 
 	$(GO) test $(PKGS)
