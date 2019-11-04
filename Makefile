@@ -2,10 +2,7 @@ PKGS := github.com/pkg/errors
 SRCDIRS := $(shell go list -f '{{.Dir}}' $(PKGS))
 GO := go
 
-check: mod test vet gofmt misspell unconvert staticcheck ineffassign unparam
-
-mod:
-	$(GO) mod download
+check: test vet gofmt misspell unconvert staticcheck ineffassign unparam
 
 test: 
 	$(GO) test $(PKGS)
