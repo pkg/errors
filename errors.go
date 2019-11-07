@@ -128,15 +128,15 @@ func (f *fundamental) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			_, _ = io.WriteString(s, f.msg)
+			io.WriteString(s, f.msg)
 			f.stack.Format(s, verb)
 			return
 		}
 		fallthrough
 	case 's':
-		_, _ = io.WriteString(s, f.msg)
+		io.WriteString(s, f.msg)
 	case 'q':
-		_, _ = fmt.Fprintf(s, "%q", f.msg)
+		fmt.Fprintf(s, "%q", f.msg)
 	}
 }
 
@@ -159,21 +159,19 @@ type withStack struct {
 
 func (w *withStack) Cause() error { return w.error }
 
-func (w *withStack) Unwrap() error { return w.error }
-
 func (w *withStack) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			_, _ = fmt.Fprintf(s, "%+v", w.Cause())
+			fmt.Fprintf(s, "%+v", w.Cause())
 			w.stack.Format(s, verb)
 			return
 		}
 		fallthrough
 	case 's':
-		_, _ = io.WriteString(s, w.Error())
+		io.WriteString(s, w.Error())
 	case 'q':
-		_, _ = fmt.Fprintf(s, "%q", w.Error())
+		fmt.Fprintf(s, "%q", w.Error())
 	}
 }
 
@@ -242,19 +240,18 @@ type withMessage struct {
 
 func (w *withMessage) Error() string { return w.msg + ": " + w.cause.Error() }
 func (w *withMessage) Cause() error  { return w.cause }
-func (w *withMessage) Unwrap() error { return w.cause }
 
 func (w *withMessage) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			_, _ = fmt.Fprintf(s, "%+v\n", w.Cause())
-			_, _ = io.WriteString(s, w.msg)
+			fmt.Fprintf(s, "%+v\n", w.Cause())
+			io.WriteString(s, w.msg)
 			return
 		}
 		fallthrough
 	case 's', 'q':
-		_, _ = io.WriteString(s, w.Error())
+		io.WriteString(s, w.Error())
 	}
 }
 

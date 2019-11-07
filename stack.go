@@ -66,19 +66,19 @@ func (f Frame) Format(s fmt.State, verb rune) {
 	case 's':
 		switch {
 		case s.Flag('+'):
-			_, _ = io.WriteString(s, f.name())
-			_, _ = io.WriteString(s, "\n\t")
-			_, _ = io.WriteString(s, f.file())
+			io.WriteString(s, f.name())
+			io.WriteString(s, "\n\t")
+			io.WriteString(s, f.file())
 		default:
-			_, _ = io.WriteString(s, path.Base(f.file()))
+			io.WriteString(s, path.Base(f.file()))
 		}
 	case 'd':
-		_, _ = io.WriteString(s, strconv.Itoa(f.line()))
+		io.WriteString(s, strconv.Itoa(f.line()))
 	case 'n':
-		_, _ = io.WriteString(s, funcname(f.name()))
+		io.WriteString(s, funcname(f.name()))
 	case 'v':
 		f.Format(s, 's')
-		_, _ = io.WriteString(s, ":")
+		io.WriteString(s, ":")
 		f.Format(s, 'd')
 	}
 }
@@ -110,11 +110,11 @@ func (st StackTrace) Format(s fmt.State, verb rune) {
 		switch {
 		case s.Flag('+'):
 			for _, f := range st {
-				_, _ = io.WriteString(s, "\n")
+				io.WriteString(s, "\n")
 				f.Format(s, verb)
 			}
 		case s.Flag('#'):
-			_, _ = fmt.Fprintf(s, "%#v", []Frame(st))
+			fmt.Fprintf(s, "%#v", []Frame(st))
 		default:
 			st.formatSlice(s, verb)
 		}
@@ -126,14 +126,14 @@ func (st StackTrace) Format(s fmt.State, verb rune) {
 // formatSlice will format this StackTrace into the given buffer as a slice of
 // Frame, only valid when called with '%s' or '%v'.
 func (st StackTrace) formatSlice(s fmt.State, verb rune) {
-	_, _ = io.WriteString(s, "[")
+	io.WriteString(s, "[")
 	for i, f := range st {
 		if i > 0 {
-			_, _ = io.WriteString(s, " ")
+			io.WriteString(s, " ")
 		}
 		f.Format(s, verb)
 	}
-	_, _ = io.WriteString(s, "]")
+	io.WriteString(s, "]")
 }
 
 // stack represents a stack of program counters.
@@ -146,7 +146,7 @@ func (s *stack) Format(st fmt.State, verb rune) {
 		case st.Flag('+'):
 			for _, pc := range *s {
 				f := Frame(pc)
-				_, _ = fmt.Fprintf(st, "\n%+v", f)
+				fmt.Fprintf(st, "\n%+v", f)
 			}
 		}
 	}
