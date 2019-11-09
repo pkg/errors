@@ -60,12 +60,14 @@ func TestIs(t *testing.T) {
 	}
 }
 
-type customErr struct{}
+type customErr struct {
+	msg string
+}
 
-func (customErr) Error() string { return "" }
+func (c customErr) Error() string { return c.msg }
 
 func TestAs(t *testing.T) {
-	var err customErr
+	var err = customErr{msg: "test message"}
 
 	type args struct {
 		err    error
@@ -105,6 +107,11 @@ func TestAs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := As(tt.args.err, tt.args.target); got != tt.want {
 				t.Errorf("As() = %v, want %v", got, tt.want)
+			}
+
+			ce := tt.args.target.(*customErr)
+			if !reflect.DeepEqual(err, *ce) {
+				t.Errorf("set target error failed, target error is %v", *ce)
 			}
 		})
 	}
