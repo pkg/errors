@@ -45,7 +45,7 @@ default:
 
 With the upcoming [Go2 error proposals](https://go.googlesource.com/proposal/+/master/design/go2draft.md) this package is moving into maintenance mode. The roadmap for a 1.0 release is as follows:
 
-- 0.9. Remove pre Go 1.9 support, address outstanding pull requests (if possible)
+- 0.9. Remove pre Go 1.9 and Go 1.10 support, address outstanding pull requests (if possible)
 - 1.0. Final release.
 
 ## Contributing
