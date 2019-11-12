@@ -4,6 +4,7 @@ package errors
 
 import (
 	stderrors "errors"
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -48,6 +49,14 @@ func TestIs(t *testing.T) {
 			name: "with message format",
 			args: args{
 				err:    WithMessagef(err, "%s", "test"),
+				target: err,
+			},
+			want: true,
+		},
+		{
+			name: "std errors compatibility",
+			args: args{
+				err:    fmt.Errorf("wrap it: %w", err),
 				target: err,
 			},
 			want: true,
@@ -104,6 +113,14 @@ func TestAs(t *testing.T) {
 			},
 			want: true,
 		},
+		{
+			name: "std errors compatibility",
+			args: args{
+				err:    fmt.Errorf("wrap it: %w", err),
+				target: new(customErr),
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -114,42 +131,6 @@ func TestAs(t *testing.T) {
 			ce := tt.args.target.(*customErr)
 			if !reflect.DeepEqual(err, *ce) {
 				t.Errorf("set target error failed, target error is %v", *ce)
-			}
-		})
-	}
-}
-
-func TestUnwrap(t *testing.T) {
-	err := New("test")
-
-	type args struct {
-		err error
-	}
-	tests := []struct {
-		name string
-		args args
-		want error
-	}{
-		{
-			name: "with stack",
-			args: args{err: WithStack(err)},
-			want: err,
-		},
-		{
-			name: "with message",
-			args: args{err: WithMessage(err, "test")},
-			want: err,
-		},
-		{
-			name: "with message format",
-			args: args{err: WithMessagef(err, "%s", "test")},
-			want: err,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := Unwrap(tt.args.err); !reflect.DeepEqual(err, tt.want) {
-				t.Errorf("Unwrap() error = %v, want %v", err, tt.want)
 			}
 		})
 	}
