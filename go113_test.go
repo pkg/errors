@@ -135,3 +135,44 @@ func TestAs(t *testing.T) {
 		})
 	}
 }
+
+func TestUnwrap(t *testing.T) {
+	err := New("test")
+
+	type args struct {
+		err error
+	}
+	tests := []struct {
+		name string
+		args args
+		want error
+	}{
+		{
+			name: "with stack",
+			args: args{err: WithStack(err)},
+			want: err,
+		},
+		{
+			name: "with message",
+			args: args{err: WithMessage(err, "test")},
+			want: err,
+		},
+		{
+			name: "with message format",
+			args: args{err: WithMessagef(err, "%s", "test")},
+			want: err,
+		},
+		{
+			name: "std errors compatibility",
+			args: args{err: fmt.Errorf("wrap: %w", err)},
+			want: err,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := Unwrap(tt.args.err); !reflect.DeepEqual(err, tt.want) {
+				t.Errorf("Unwrap() error = %v, want %v", err, tt.want)
+			}
+		})
+	}
+}
