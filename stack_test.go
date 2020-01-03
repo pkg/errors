@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"fmt"
 	"runtime"
 	"testing"
 )
@@ -142,7 +141,7 @@ func TestStackTrace(t *testing.T) {
 	}, {
 		Cause(func() error {
 			return func() error {
-				return Errorf("hello %s", fmt.Sprintf("world"))
+				return Errorf("hello %s", "world")
 			}()
 		}()), []string{
 			`github.com/pkg/errors.TestStackTrace.func2.1` +
