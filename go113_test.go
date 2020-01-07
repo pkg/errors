@@ -9,7 +9,29 @@ import (
 	"testing"
 )
 
-func TestErrorChainCompat(t *testing.T) {
+func TestCauseErrorChainCompat(t *testing.T) {
+	err := stderrors.New("the cause!")
+
+	// Wrap error using the standard library
+	wrapped := fmt.Errorf("wrapped with stdlib: %w", err)
+	if Cause(wrapped) != err {
+		t.Errorf("Cause does not support Go 1.13 error chains")
+	}
+
+	// Wrap in another layer using pkg/errors
+	wrapped = WithMessage(wrapped, "wrapped with pkg/errors")
+	if Cause(wrapped) != err {
+		t.Errorf("Cause does not support Go 1.13 error chains")
+	}
+
+	// Wrap in another layer using the standard library
+	wrapped = fmt.Errorf("wrapped with stdlib: %w", wrapped)
+	if Cause(wrapped) != err {
+		t.Errorf("Cause does not support Go 1.13 error chains")
+	}
+}
+
+func TestWrapErrorChainCompat(t *testing.T) {
 	err := stderrors.New("error that gets wrapped")
 	wrapped := Wrap(err, "wrapped up")
 	if !stderrors.Is(wrapped, err) {
