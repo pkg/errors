@@ -195,7 +195,7 @@ func Example_stackTrace() {
 func ExampleCause_printf() {
 	err := errors.Wrap(func() error {
 		return func() error {
-			return errors.Errorf("hello %s", fmt.Sprintf("world"))
+			return errors.New("hello world")
 		}()
 	}(), "failed")
 
