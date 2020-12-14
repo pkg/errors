@@ -122,6 +122,8 @@ type fundamental struct {
 	*stack
 }
 
+func (f *fundamental) hasStack() bool { return true }
+
 func (f *fundamental) Error() string { return f.msg }
 
 func (f *fundamental) Format(s fmt.State, verb rune) {
@@ -178,12 +180,23 @@ func (w *withStack) Format(s fmt.State, verb rune) {
 	}
 }
 
+func (w *withStack) hasStack() bool { return true }
+
 // Wrap returns an error annotating err with a stack trace
 // at the point Wrap is called, and the supplied message.
 // If err is nil, Wrap returns nil.
 func Wrap(err error, message string) error {
+	type hasStacker interface {
+		hasStack() bool
+	}
 	if err == nil {
 		return nil
+	}
+	if stacker, ok := err.(hasStacker); ok && stacker.hasStack() {
+		return &withMessage{
+			cause: err,
+			msg:   message,
+		}
 	}
 	err = &withMessage{
 		cause: err,
@@ -199,8 +212,17 @@ func Wrap(err error, message string) error {
 // at the point Wrapf is called, and the format specifier.
 // If err is nil, Wrapf returns nil.
 func Wrapf(err error, format string, args ...interface{}) error {
+	type hasStacker interface {
+		hasStack() bool
+	}
 	if err == nil {
 		return nil
+	}
+	if stacker, ok := err.(hasStacker); ok && stacker.hasStack() {
+		return &withMessage{
+			cause: err,
+			msg:   fmt.Sprintf(format, args...),
+		}
 	}
 	err = &withMessage{
 		cause: err,
@@ -259,6 +281,16 @@ func (w *withMessage) Format(s fmt.State, verb rune) {
 	case 's', 'q':
 		io.WriteString(s, w.Error())
 	}
+}
+
+func (w *withMessage) hasStack() bool {
+	type hasStacker interface {
+		hasStack() bool
+	}
+	if cause, ok := w.Cause().(hasStacker); ok {
+		return cause.hasStack()
+	}
+	return false
 }
 
 // Cause returns the underlying cause of the error, if possible.
