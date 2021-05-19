@@ -118,17 +118,13 @@ func ExistStack(err error) bool {
 	type causer interface {
 		Cause() error
 	}
-	if value, ok := err.(causer); ok {
-		return ExistStack(value.Cause())
-	} else {
+	cause, ok := err.(causer)
+	if !ok {
 		return false
 	}
-	cause, ok := err.(causer)
-        if !ok {
-                return false
-        }
-        return ExistStack(cause.Cause())
+	return ExistStack(cause.Cause())
 }
+
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 // Errorf also records the stack trace at the point it was called.
