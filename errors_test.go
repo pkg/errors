@@ -27,6 +27,23 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestExistStack(t *testing.T) {
+	tests := []struct {
+		err  error
+		want bool
+	}{
+		{io.EOF, false},
+		{Wrap(io.EOF, "read error"), true},
+	}
+
+	for _, tt := range tests {
+		got := ExistStack(tt.err)
+		if got != tt.want {
+			t.Errorf("ExistStack(%v): got: %v, want %v", tt.err, got, tt.want)
+		}
+	}
+}
+
 func TestWrapNil(t *testing.T) {
 	got := Wrap(nil, "no error")
 	if got != nil {
