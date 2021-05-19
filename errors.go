@@ -67,9 +67,10 @@
 //
 // New, Errorf, Wrap, and Wrapf record a stack trace at the point they are
 // invoked. This information can be retrieved with the following interface:
-type stackTracer interface {
-        StackTrace() errors.StackTrace
-}
+//
+//     type stackTracer interface {
+//             StackTrace() errors.StackTrace
+//     }
 //
 // The returned errors.StackTrace type is defined as
 //
