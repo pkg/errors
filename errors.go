@@ -123,6 +123,11 @@ func ExistStack(err error) bool {
 	} else {
 		return false
 	}
+	cause, ok := err.(causer)
+        if !ok {
+                return false
+        }
+        return ExistStack(cause.Cause())
 }
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
