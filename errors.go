@@ -106,6 +106,27 @@ func New(message string) error {
 	}
 }
 
+// ExistStack return an error already with stack
+// ExistStack will check all parent error
+func ExistStack(err error) bool {
+	type stackTracer interface {
+		StackTrace() StackTrace
+	}
+	_, ok := err.(stackTracer)
+	if ok {
+		return true
+	}
+
+	type causer interface {
+		Cause() error
+	}
+	cause, ok := err.(causer)
+	if !ok {
+		return false
+	}
+	return ExistStack(cause.Cause())
+}
+
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 // Errorf also records the stack trace at the point it was called.
