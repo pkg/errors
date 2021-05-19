@@ -119,7 +119,7 @@ func ExistStack(err error) bool {
 		Cause() error
 	}
 	if value, ok := err.(causer); ok {
-		return ExistStack(err.Cause())
+		return ExistStack(value.Cause())
 	} else {
 		return false
 	}
