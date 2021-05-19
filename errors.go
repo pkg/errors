@@ -67,10 +67,9 @@
 //
 // New, Errorf, Wrap, and Wrapf record a stack trace at the point they are
 // invoked. This information can be retrieved with the following interface:
-//
-//     type stackTracer interface {
-//             StackTrace() errors.StackTrace
-//     }
+type stackTracer interface {
+        StackTrace() errors.StackTrace
+}
 //
 // The returned errors.StackTrace type is defined as
 //
@@ -106,6 +105,23 @@ func New(message string) error {
 	}
 }
 
+// ExistStack return an error already with stack
+// ExistStack will check all parent error
+func ExistStack(err error) bool {
+	type stackTracer interface {
+		StackTrace() StackTrace
+	}
+	if _, ok := err.(stackTracer); ok {
+		return true
+	}
+	type causer interface {
+		Cause() error
+	}
+	if _, ok := err.(causer); !ok {
+		return false
+	}
+	return ExistStack(err.Cause())
+}
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 // Errorf also records the stack trace at the point it was called.
