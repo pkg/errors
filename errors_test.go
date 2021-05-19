@@ -33,10 +33,10 @@ func TestExistStack(t *testing.T) {
 		want bool
 	}{
 		{io.EOF, false},
-		{Wrap(io.EOF, "read error"), true},
-		{WithStack(io.EOF), true},
-		{WithMessage(io.EOF, "read error"), false},
 		{New("read error"), true},
+		{Wrap(io.EOF, "read error"), true},
+		{WithMessage(io.EOF, "read error"), false},
+		{WithStack(io.EOF), true},
 	}
 
 	for _, tt := range tests {

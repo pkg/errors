@@ -112,9 +112,11 @@ func ExistStack(err error) bool {
 	type stackTracer interface {
 		StackTrace() StackTrace
 	}
-	if _, ok := err.(stackTracer); ok {
+	_, ok := err.(stackTracer)
+	if ok {
 		return true
 	}
+
 	type causer interface {
 		Cause() error
 	}
