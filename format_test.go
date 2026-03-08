@@ -384,7 +384,7 @@ func TestFormatWrappedNew(t *testing.T) {
 	}
 }
 
-func testFormatRegexp(t *testing.T, n int, arg interface{}, format, want string) {
+func testFormatRegexp(t *testing.T, n int, arg any, format, want string) {
 	t.Helper()
 	got := fmt.Sprintf(format, arg)
 	gotLines := strings.Split(got, "\n")
@@ -477,7 +477,7 @@ func parseBlocks(input string, detectStackboundaries bool) ([]string, error) {
 	return blocks, nil
 }
 
-func testFormatCompleteCompare(t *testing.T, n int, arg interface{}, format string, want []string, detectStackBoundaries bool) {
+func testFormatCompleteCompare(t *testing.T, n int, arg any, format string, want []string, detectStackBoundaries bool) {
 	gotStr := fmt.Sprintf(format, arg)
 
 	got, err := parseBlocks(gotStr, detectStackBoundaries)

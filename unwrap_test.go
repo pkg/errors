@@ -3,7 +3,6 @@ package errors
 import (
 	stderrors "errors"
 	"fmt"
-	"reflect"
 	"testing"
 )
 
@@ -80,7 +79,7 @@ func TestAs(t *testing.T) {
 
 	type args struct {
 		err    error
-		target interface{}
+		target any
 	}
 	tests := []struct {
 		name string
@@ -127,7 +126,7 @@ func TestAs(t *testing.T) {
 			}
 
 			ce := tt.args.target.(*customErr)
-			if !reflect.DeepEqual(err, *ce) {
+			if err != *ce {
 				t.Errorf("set target error failed, target error is %v", *ce)
 			}
 		})
@@ -168,7 +167,7 @@ func TestUnwrap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Unwrap(tt.args.err); !reflect.DeepEqual(err, tt.want) {
+			if err := Unwrap(tt.args.err); err != tt.want {
 				t.Errorf("Unwrap() error = %v, want %v", err, tt.want)
 			}
 		})

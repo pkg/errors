@@ -20,13 +20,13 @@ func Is(err, target error) bool { return stderrors.Is(err, target) }
 // repeatedly calling Unwrap.
 //
 // An error matches target if the error's concrete value is assignable to the value
-// pointed to by target, or if the error has a method As(interface{}) bool such that
+// pointed to by target, or if the error has a method As(any) bool such that
 // As(target) returns true. In the latter case, the As method is responsible for
 // setting target.
 //
 // As will panic if target is not a non-nil pointer to either a type that implements
 // error, or to any interface type. As returns false if err is nil.
-func As(err error, target interface{}) bool { return stderrors.As(err, target) }
+func As(err error, target any) bool { return stderrors.As(err, target) }
 
 // Unwrap returns the result of calling the Unwrap method on err, if err's
 // type contains an Unwrap method returning error.

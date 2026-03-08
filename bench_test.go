@@ -23,7 +23,7 @@ func yesErrors(at, depth int) error {
 
 // GlobalE is an exported global to store the result of benchmark results,
 // preventing the compiler from optimising the benchmark functions away.
-var GlobalE interface{}
+var GlobalE any
 
 func BenchmarkErrors(b *testing.B) {
 	type run struct {

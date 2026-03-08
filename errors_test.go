@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"reflect"
 	"testing"
 )
 
@@ -100,7 +99,7 @@ func TestCause(t *testing.T) {
 
 	for i, tt := range tests {
 		got := Cause(tt.err)
-		if !reflect.DeepEqual(got, tt.want) {
+		if got != tt.want {
 			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
 		}
 	}
