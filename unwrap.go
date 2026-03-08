@@ -34,3 +34,11 @@ func As(err error, target any) bool { return stderrors.As(err, target) }
 func Unwrap(err error) error {
 	return stderrors.Unwrap(err)
 }
+
+// Join returns an error that wraps the given errors.
+// Any nil error values are discarded.
+// Join returns nil if every value in errs is nil.
+// The error formats each wrapped error, separated by newlines.
+func Join(errs ...error) error {
+	return stderrors.Join(errs...)
+}
