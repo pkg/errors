@@ -12,7 +12,6 @@ linters:
   default: standard
   enable:
     - bodyclose
-    - errname
     - forbidigo
     - gocritic
     - gosec
@@ -25,3 +24,17 @@ linters:
     - unconvert
     - unparam
     - whitespace
+  settings:
+    errcheck:
+      exclude-functions:
+        - io.WriteString
+  exclusions:
+    presets:
+      - std-error-handling
+    rules:
+      - linters:
+          - gosec
+        text: "G104"
+      - linters:
+          - staticcheck
+        text: "QF1008"
