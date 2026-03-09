@@ -1,4 +1,4 @@
-# errors [![Travis-CI](https://travis-ci.org/pkg/errors.svg)](https://travis-ci.org/pkg/errors) [![AppVeyor](https://ci.appveyor.com/api/projects/status/b98mptawhudj53ep/branch/master?svg=true)](https://ci.appveyor.com/project/davecheney/errors/branch/master) [![GoDoc](https://godoc.org/github.com/pkg/errors?status.svg)](http://godoc.org/github.com/pkg/errors) [![Report card](https://goreportcard.com/badge/github.com/pkg/errors)](https://goreportcard.com/report/github.com/pkg/errors) [![Sourcegraph](https://sourcegraph.com/github.com/pkg/errors/-/badge.svg)](https://sourcegraph.com/github.com/pkg/errors?badge)
+# errors [![GoDoc](https://godoc.org/github.com/pkg/errors?status.svg)](https://pkg.go.dev/github.com/pkg/errors) [![Report card](https://goreportcard.com/badge/github.com/pkg/errors)](https://goreportcard.com/report/github.com/pkg/errors) [![Sourcegraph](https://sourcegraph.com/github.com/pkg/errors/-/badge.svg)](https://sourcegraph.com/github.com/pkg/errors?badge)
 
 Package errors provides simple error handling primitives.
 
@@ -41,18 +41,13 @@ default:
 
 [Read the package documentation for more information](https://godoc.org/github.com/pkg/errors).
 
-## Roadmap
+## Compared to the standard library's `errors` package
 
-With the upcoming [Go2 error proposals](https://go.googlesource.com/proposal/+/master/design/go2draft.md) this package is moving into maintenance mode. The roadmap for a 1.0 release is as follows:
-
-- 0.9. Remove pre Go 1.9 and Go 1.10 support, address outstanding pull requests (if possible)
-- 1.0. Final release.
+This package was initially built to manage chains of typed errors. Support for this was later added to the standard library's `errors` package via `Unwrap` methods. Unfortunately, the standard library's `errors` package does not support stack traces, so it cannot be used as a drop-in replacement for the features this package provides. This package will mostly work interoperably with the standard library's `errors` package; typed errors added in `pkg/errors` work fine in `errors.Is` and `errors.As`, and you can wrap them with other typed errors.
 
 ## Contributing
 
-Because of the Go2 errors changes, this package is not accepting proposals for new functionality. With that said, we welcome pull requests, bug fixes and issue reports. 
-
-Before sending a PR, please discuss your change by raising an issue.
+This package is in maintenance mode. New features that extend the scope of the package are not being accepted and should be implemented in other modules. Exceptions would be features that improve interoperability with the standard library's `errors` package when it receives new features, as `pkg/errors` should mostly be able to act as a drop-in replacement. Bug fixes and reports are welcome. CI will be maintained to make sure the package is tested against new versions of Go and Go linting tools.
 
 ## License
 
