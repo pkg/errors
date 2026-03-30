@@ -1,0 +1,40 @@
+version: "2"
+
+run:
+  timeout: 10m
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - forbidigo
+    - gocritic
+    - gosec
+    - importas
+    - makezero
+    - misspell
+    - noctx
+    - nolintlint
+    - revive
+    - unconvert
+    - unparam
+    - whitespace
+  settings:
+    errcheck:
+      exclude-functions:
+        - io.WriteString
+  exclusions:
+    presets:
+      - std-error-handling
+    rules:
+      - linters:
+          - gosec
+        text: "G104"
+      - linters:
+          - staticcheck
+        text: "QF1008"

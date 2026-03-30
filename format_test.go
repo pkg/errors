@@ -27,7 +27,7 @@ func TestFormatNew(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.TestFormatNew\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:26",
+			"\t.+/format_test.go:26",
 	}, {
 		New("error"),
 		"%q",
@@ -57,7 +57,7 @@ func TestFormatErrorf(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.TestFormatErrorf\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:56",
+			"\t.+/format_test.go:56",
 	}}
 
 	for i, tt := range tests {
@@ -83,7 +83,7 @@ func TestFormatWrap(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.TestFormatWrap\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:82",
+			"\t.+/format_test.go:82",
 	}, {
 		Wrap(io.EOF, "error"),
 		"%s",
@@ -98,14 +98,14 @@ func TestFormatWrap(t *testing.T) {
 		"EOF\n" +
 			"error\n" +
 			"github.com/pkg/errors.TestFormatWrap\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:96",
+			"\t.+/format_test.go:96",
 	}, {
 		Wrap(Wrap(io.EOF, "error1"), "error2"),
 		"%+v",
 		"EOF\n" +
 			"error1\n" +
 			"github.com/pkg/errors.TestFormatWrap\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:103\n",
+			"\t.+/format_test.go:103\n",
 	}, {
 		Wrap(New("error with space"), "context"),
 		"%q",
@@ -136,7 +136,7 @@ func TestFormatWrapf(t *testing.T) {
 		"EOF\n" +
 			"error2\n" +
 			"github.com/pkg/errors.TestFormatWrapf\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:134",
+			"\t.+/format_test.go:134",
 	}, {
 		Wrapf(New("error"), "error%d", 2),
 		"%s",
@@ -150,7 +150,7 @@ func TestFormatWrapf(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.TestFormatWrapf\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:149",
+			"\t.+/format_test.go:149",
 	}}
 
 	for i, tt := range tests {
@@ -176,7 +176,7 @@ func TestFormatWithStack(t *testing.T) {
 		"%+v",
 		[]string{"EOF",
 			"github.com/pkg/errors.TestFormatWithStack\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:175"},
+				"\t.+/format_test.go:175"},
 	}, {
 		WithStack(New("error")),
 		"%s",
@@ -190,36 +190,36 @@ func TestFormatWithStack(t *testing.T) {
 		"%+v",
 		[]string{"error",
 			"github.com/pkg/errors.TestFormatWithStack\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:189",
+				"\t.+/format_test.go:189",
 			"github.com/pkg/errors.TestFormatWithStack\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:189"},
+				"\t.+/format_test.go:189"},
 	}, {
 		WithStack(WithStack(io.EOF)),
 		"%+v",
 		[]string{"EOF",
 			"github.com/pkg/errors.TestFormatWithStack\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:197",
+				"\t.+/format_test.go:197",
 			"github.com/pkg/errors.TestFormatWithStack\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:197"},
+				"\t.+/format_test.go:197"},
 	}, {
 		WithStack(WithStack(Wrapf(io.EOF, "message"))),
 		"%+v",
 		[]string{"EOF",
 			"message",
 			"github.com/pkg/errors.TestFormatWithStack\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:205",
+				"\t.+/format_test.go:205",
 			"github.com/pkg/errors.TestFormatWithStack\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:205",
+				"\t.+/format_test.go:205",
 			"github.com/pkg/errors.TestFormatWithStack\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:205"},
+				"\t.+/format_test.go:205"},
 	}, {
 		WithStack(Errorf("error%d", 1)),
 		"%+v",
 		[]string{"error1",
 			"github.com/pkg/errors.TestFormatWithStack\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:216",
+				"\t.+/format_test.go:216",
 			"github.com/pkg/errors.TestFormatWithStack\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:216"},
+				"\t.+/format_test.go:216"},
 	}}
 
 	for i, tt := range tests {
@@ -246,7 +246,7 @@ func TestFormatWithMessage(t *testing.T) {
 		[]string{
 			"error",
 			"github.com/pkg/errors.TestFormatWithMessage\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:244",
+				"\t.+/format_test.go:244",
 			"error2"},
 	}, {
 		WithMessage(io.EOF, "addition1"),
@@ -273,13 +273,13 @@ func TestFormatWithMessage(t *testing.T) {
 		"%+v",
 		[]string{"EOF", "error1", "error2",
 			"github.com/pkg/errors.TestFormatWithMessage\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:272"},
+				"\t.+/format_test.go:272"},
 	}, {
 		WithMessage(Errorf("error%d", 1), "error2"),
 		"%+v",
 		[]string{"error1",
 			"github.com/pkg/errors.TestFormatWithMessage\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:278",
+				"\t.+/format_test.go:278",
 			"error2"},
 	}, {
 		WithMessage(WithStack(io.EOF), "error"),
@@ -287,7 +287,7 @@ func TestFormatWithMessage(t *testing.T) {
 		[]string{
 			"EOF",
 			"github.com/pkg/errors.TestFormatWithMessage\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:285",
+				"\t.+/format_test.go:285",
 			"error"},
 	}, {
 		WithMessage(Wrap(WithStack(io.EOF), "inside-error"), "outside-error"),
@@ -295,10 +295,10 @@ func TestFormatWithMessage(t *testing.T) {
 		[]string{
 			"EOF",
 			"github.com/pkg/errors.TestFormatWithMessage\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:293",
+				"\t.+/format_test.go:293",
 			"inside-error",
 			"github.com/pkg/errors.TestFormatWithMessage\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:293",
+				"\t.+/format_test.go:293",
 			"outside-error"},
 	}}
 
@@ -315,11 +315,11 @@ func TestFormatGeneric(t *testing.T) {
 		{New("new-error"), []string{
 			"new-error",
 			"github.com/pkg/errors.TestFormatGeneric\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:315"},
+				"\t.+/format_test.go:315"},
 		}, {Errorf("errorf-error"), []string{
 			"errorf-error",
 			"github.com/pkg/errors.TestFormatGeneric\n" +
-				"\t.+/github.com/pkg/errors/format_test.go:319"},
+				"\t.+/format_test.go:319"},
 		}, {errors.New("errors-new-error"), []string{
 			"errors-new-error"},
 		},
@@ -330,24 +330,24 @@ func TestFormatGeneric(t *testing.T) {
 			func(err error) error { return WithMessage(err, "with-message") },
 			[]string{"with-message"},
 		}, {
-			func(err error) error { return WithStack(err) },
+			func(err error) error { return WithStack(err) }, //nolint:gocritic // unlambda: closure needed for correct stack trace location
 			[]string{
 				"github.com/pkg/errors.(func·002|TestFormatGeneric.func2)\n\t" +
-					".+/github.com/pkg/errors/format_test.go:333",
+					".+/format_test.go:333",
 			},
 		}, {
 			func(err error) error { return Wrap(err, "wrap-error") },
 			[]string{
 				"wrap-error",
 				"github.com/pkg/errors.(func·003|TestFormatGeneric.func3)\n\t" +
-					".+/github.com/pkg/errors/format_test.go:339",
+					".+/format_test.go:339",
 			},
 		}, {
 			func(err error) error { return Wrapf(err, "wrapf-error%d", 1) },
 			[]string{
 				"wrapf-error1",
 				"github.com/pkg/errors.(func·004|TestFormatGeneric.func4)\n\t" +
-					".+/github.com/pkg/errors/format_test.go:346",
+					".+/format_test.go:346",
 			},
 		},
 	}
@@ -374,9 +374,9 @@ func TestFormatWrappedNew(t *testing.T) {
 		"%+v",
 		"error\n" +
 			"github.com/pkg/errors.wrappedNew\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:364\n" +
+			"\t.+/format_test.go:364\n" +
 			"github.com/pkg/errors.TestFormatWrappedNew\n" +
-			"\t.+/github.com/pkg/errors/format_test.go:373",
+			"\t.+/format_test.go:373",
 	}}
 
 	for i, tt := range tests {
@@ -384,11 +384,11 @@ func TestFormatWrappedNew(t *testing.T) {
 	}
 }
 
-func testFormatRegexp(t *testing.T, n int, arg interface{}, format, want string) {
+func testFormatRegexp(t *testing.T, n int, arg any, format, want string) {
 	t.Helper()
 	got := fmt.Sprintf(format, arg)
-	gotLines := strings.SplitN(got, "\n", -1)
-	wantLines := strings.SplitN(want, "\n", -1)
+	gotLines := strings.Split(got, "\n")
+	wantLines := strings.Split(want, "\n")
 
 	if len(wantLines) > len(gotLines) {
 		t.Errorf("test %d: wantLines(%d) > gotLines(%d):\n got: %q\nwant: %q", n+1, len(wantLines), len(gotLines), got, want)
@@ -409,22 +409,21 @@ func testFormatRegexp(t *testing.T, n int, arg interface{}, format, want string)
 var stackLineR = regexp.MustCompile(`\.`)
 
 // parseBlocks parses input into a slice, where:
-//  - incase entry contains a newline, its a stacktrace
-//  - incase entry contains no newline, its a solo line.
+//   - incase entry contains a newline, its a stacktrace
+//   - incase entry contains no newline, its a solo line.
 //
 // Detecting stack boundaries only works incase the WithStack-calls are
 // to be found on the same line, thats why it is optionally here.
 //
 // Example use:
 //
-// for _, e := range blocks {
-//   if strings.ContainsAny(e, "\n") {
-//     // Match as stack
-//   } else {
-//     // Match as line
-//   }
-// }
-//
+//	for _, e := range blocks {
+//	  if strings.ContainsAny(e, "\n") {
+//	    // Match as stack
+//	  } else {
+//	    // Match as line
+//	  }
+//	}
 func parseBlocks(input string, detectStackboundaries bool) ([]string, error) {
 	var blocks []string
 
@@ -478,7 +477,7 @@ func parseBlocks(input string, detectStackboundaries bool) ([]string, error) {
 	return blocks, nil
 }
 
-func testFormatCompleteCompare(t *testing.T, n int, arg interface{}, format string, want []string, detectStackBoundaries bool) {
+func testFormatCompleteCompare(t *testing.T, n int, arg any, format string, want []string, detectStackBoundaries bool) {
 	gotStr := fmt.Sprintf(format, arg)
 
 	got, err := parseBlocks(gotStr, detectStackBoundaries)
@@ -502,11 +501,8 @@ func testFormatCompleteCompare(t *testing.T, n int, arg interface{}, format stri
 				t.Fatalf("test %d: block %d: fmt.Sprintf(%q, err):\ngot:\n%q\nwant:\n%q\nall-got:\n%s\nall-want:\n%s\n",
 					n+1, i+1, format, got[i], want[i], prettyBlocks(got), prettyBlocks(want))
 			}
-		} else {
-			// Match as message
-			if got[i] != want[i] {
-				t.Fatalf("test %d: fmt.Sprintf(%s, err) at block %d got != want:\n got: %q\nwant: %q", n+1, format, i+1, got[i], want[i])
-			}
+		} else if got[i] != want[i] {
+			t.Fatalf("test %d: fmt.Sprintf(%s, err) at block %d got != want:\n got: %q\nwant: %q", n+1, format, i+1, got[i], want[i])
 		}
 	}
 }
@@ -547,9 +543,9 @@ func testGenericRecursive(t *testing.T, beforeErr error, beforeWant []string, li
 
 		// Merge two stacks behind each other.
 		if strings.ContainsAny(beforeWant[last], "\n") && strings.ContainsAny(w.want[0], "\n") {
-			want = append(beforeWant[:last], append([]string{beforeWant[last] + "((?s).*)" + w.want[0]}, w.want[1:]...)...)
+			want = append(beforeWant[:last], append([]string{beforeWant[last] + "((?s).*)" + w.want[0]}, w.want[1:]...)...) //nolint:gocritic // appendAssign: intentionally assigning to want, not beforeWant
 		} else {
-			want = append(beforeWant, w.want...)
+			want = append(beforeWant, w.want...) //nolint:gocritic // appendAssign: intentionally assigning to want, not beforeWant
 		}
 
 		testFormatCompleteCompare(t, maxDepth, err, "%+v", want, false)

@@ -1,14 +1,62 @@
 name: ci
 
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
-  workflow_dispatch:
   push:
+    branches:
+      - master
   pull_request:
 
 jobs:
-  dummy:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        goversion: ["1.20", "1.21", "1.22", "1.23", "1.24", "1.25", "1.26"]
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/bake-action@v7
+        with:
+          targets: build-all
+        env:
+          GO_VERSION: ${{ matrix.goversion }}
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/bake-action@v7
+        with:
+          targets: test
+        env:
+          COVER_FILENAME: "cover.out"
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          disable_file_fixes: true
+          files: ./cover.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+  test-os:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go test -v ./...
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/bake-action@v7
+        with:
+          targets: lint-all

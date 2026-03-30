@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"reflect"
 	"testing"
 )
 
@@ -100,7 +99,7 @@ func TestCause(t *testing.T) {
 
 	for i, tt := range tests {
 		got := Cause(tt.err)
-		if !reflect.DeepEqual(got, tt.want) {
+		if got != tt.want {
 			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
 		}
 	}
@@ -228,7 +227,7 @@ func TestWithMessagef(t *testing.T) {
 // but the change in errors#27 made them incomparable. Assert that
 // various kinds of errors have a functional equality operator, even
 // if the result of that equality is always false.
-func TestErrorEquality(t *testing.T) {
+func TestErrorEquality(_ *testing.T) {
 	vals := []error{
 		nil,
 		io.EOF,

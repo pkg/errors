@@ -1,5 +1,3 @@
-// +build go1.7
-
 package errors
 
 import (
@@ -25,7 +23,7 @@ func yesErrors(at, depth int) error {
 
 // GlobalE is an exported global to store the result of benchmark results,
 // preventing the compiler from optimising the benchmark functions away.
-var GlobalE interface{}
+var GlobalE any
 
 func BenchmarkErrors(b *testing.B) {
 	type run struct {
@@ -97,7 +95,7 @@ func BenchmarkStackFormatting(b *testing.B) {
 		name := fmt.Sprintf("%s-stacktrace-%d", r.format, r.stack)
 		b.Run(name, func(b *testing.B) {
 			err := yesErrors(0, r.stack)
-			st := err.(*fundamental).stack.StackTrace()
+			st := err.(*fundamental).StackTrace()
 			b.ReportAllocs()
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {

@@ -1,11 +1,9 @@
-// +build go1.13
-
 package errors
 
 import (
 	stderrors "errors"
 	"fmt"
-	"reflect"
+	"io"
 	"testing"
 )
 
@@ -82,7 +80,7 @@ func TestAs(t *testing.T) {
 
 	type args struct {
 		err    error
-		target interface{}
+		target any
 	}
 	tests := []struct {
 		name string
@@ -129,7 +127,7 @@ func TestAs(t *testing.T) {
 			}
 
 			ce := tt.args.target.(*customErr)
-			if !reflect.DeepEqual(err, *ce) {
+			if err != *ce {
 				t.Errorf("set target error failed, target error is %v", *ce)
 			}
 		})
@@ -170,9 +168,99 @@ func TestUnwrap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Unwrap(tt.args.err); !reflect.DeepEqual(err, tt.want) {
+			if err := Unwrap(tt.args.err); err != tt.want {
 				t.Errorf("Unwrap() error = %v, want %v", err, tt.want)
 			}
 		})
+	}
+}
+
+func TestJoin(t *testing.T) {
+	err1 := New("err1")
+	err2 := New("err2")
+
+	tests := []struct {
+		name string
+		errs []error
+		want string
+	}{
+		{
+			name: "two errors",
+			errs: []error{err1, err2},
+			want: "err1\nerr2",
+		},
+		{
+			name: "nil filtered",
+			errs: []error{err1, nil, err2},
+			want: "err1\nerr2",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := Join(tt.errs...)
+			if err == nil {
+				t.Fatal("Join() = nil, want non-nil")
+			}
+			if got := err.Error(); got != tt.want {
+				t.Errorf("Join().Error() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestJoinNil(t *testing.T) {
+	if err := Join(); err != nil {
+		t.Errorf("Join() = %v, want nil", err)
+	}
+	if err := Join(nil, nil); err != nil {
+		t.Errorf("Join(nil, nil) = %v, want nil", err)
+	}
+}
+
+func TestWrapAsType(t *testing.T) {
+	err := customErr{msg: "test"}
+	wrapped := Wrap(err, "wrapped")
+
+	tests := []struct {
+		name string
+		fn   func(error) (customErr, bool)
+	}{
+		{name: "AsType", fn: AsType[customErr]},
+		{name: "stderrors.AsType", fn: stderrors.AsType[customErr]},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := tt.fn(wrapped)
+			if !ok {
+				t.Fatalf("%s[customErr]() = false, want true", tt.name)
+			}
+			if got != err {
+				t.Errorf("%s[customErr]() = %v, want %v", tt.name, got, err)
+			}
+		})
+	}
+}
+
+func TestAsTypeNotFound(t *testing.T) {
+	err := io.EOF
+	assertNotFound := func(name string, ok bool) {
+		t.Helper()
+		if ok {
+			t.Errorf("%s[customErr](io.EOF) = true, want false", name)
+		}
+	}
+
+	tests := []struct {
+		name string
+		fn   func(error) (customErr, bool)
+	}{
+		{name: "AsType", fn: AsType[customErr]},
+		{name: "stderrors.AsType", fn: stderrors.AsType[customErr]},
+	}
+
+	for _, tt := range tests {
+		_, ok := tt.fn(err)
+		assertNotFound(tt.name, ok)
 	}
 }
