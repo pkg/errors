@@ -186,8 +186,9 @@ func Wrap(err error, message string) error {
 		return nil
 	}
 	err = &withMessage{
-		cause: err,
-		msg:   message,
+		cause:              err,
+		msg:                message,
+		stackedOnWithStack: true,
 	}
 	return &withStack{
 		err,
@@ -203,8 +204,9 @@ func Wrapf(err error, format string, args ...interface{}) error {
 		return nil
 	}
 	err = &withMessage{
-		cause: err,
-		msg:   fmt.Sprintf(format, args...),
+		cause:              err,
+		msg:                fmt.Sprintf(format, args...),
+		stackedOnWithStack: true,
 	}
 	return &withStack{
 		err,
@@ -219,8 +221,9 @@ func WithMessage(err error, message string) error {
 		return nil
 	}
 	return &withMessage{
-		cause: err,
-		msg:   message,
+		cause:              err,
+		msg:                message,
+		stackedOnWithStack: false,
 	}
 }
 
@@ -237,8 +240,9 @@ func WithMessagef(err error, format string, args ...interface{}) error {
 }
 
 type withMessage struct {
-	cause error
-	msg   string
+	cause              error
+	msg                string
+	stackedOnWithStack bool
 }
 
 func (w *withMessage) Error() string { return w.msg + ": " + w.cause.Error() }
@@ -251,8 +255,13 @@ func (w *withMessage) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			fmt.Fprintf(s, "%+v\n", w.Cause())
-			io.WriteString(s, w.msg)
+			if w.stackedOnWithStack {
+				fmt.Fprintf(s, "%+v\n", w.Cause())
+				io.WriteString(s, w.msg)
+			} else {
+				io.WriteString(s, w.msg+": ")
+				fmt.Fprintf(s, "%+v", w.Cause())
+			}
 			return
 		}
 		fallthrough
