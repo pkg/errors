@@ -145,9 +145,9 @@ func TestStackTrace(t *testing.T) {
 				return Errorf("hello %s", fmt.Sprintf("world: %s", "ooh"))
 			}()
 		}()), []string{
-			`github.com/pkg/errors.TestStackTrace.func2.1` +
+			`github.com/pkg/errors.TestStackTrace\..*` +
 				"\n\t.+/github.com/pkg/errors/stack_test.go:145", // this is the stack of Errorf
-			`github.com/pkg/errors.TestStackTrace.func2` +
+			`github.com/pkg/errors.TestStackTrace\..*` +
 				"\n\t.+/github.com/pkg/errors/stack_test.go:146", // this is the stack of Errorf's caller
 			"github.com/pkg/errors.TestStackTrace\n" +
 				"\t.+/github.com/pkg/errors/stack_test.go:147", // this is the stack of Errorf's caller's caller
@@ -224,15 +224,14 @@ func TestStackTraceFormat(t *testing.T) {
 	}, {
 		stackTrace()[:2],
 		"%+v",
-		"\n" +
-			"github.com/pkg/errors.stackTrace\n" +
+		"github.com/pkg/errors.stackTrace\n" +
 			"\t.+/github.com/pkg/errors/stack_test.go:174\n" +
 			"github.com/pkg/errors.TestStackTraceFormat\n" +
 			"\t.+/github.com/pkg/errors/stack_test.go:225",
 	}, {
 		stackTrace()[:2],
 		"%#v",
-		`\[\]errors.Frame{stack_test.go:174, stack_test.go:233}`,
+		`\[\]errors.Frame{stack_test.go:174, stack_test.go:232}`,
 	}}
 
 	for i, tt := range tests {
@@ -247,4 +246,13 @@ func caller() Frame {
 	frames := runtime.CallersFrames(pcs[:n])
 	frame, _ := frames.Next()
 	return Frame(frame.PC)
+}
+
+
+func TestStackTraceFormatNoLeadingNewline(t *testing.T) {
+	st := stackTrace()[:1]
+	got := fmt.Sprintf("%+v", st)
+	if len(got) > 0 && got[0] == '\n' {
+		t.Fatalf("StackTrace has leading newline: %q", got)
+	}
 }

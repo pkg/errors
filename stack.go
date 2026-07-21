@@ -109,8 +109,14 @@ func (st StackTrace) Format(s fmt.State, verb rune) {
 	case 'v':
 		switch {
 		case s.Flag('+'):
-			for _, f := range st {
-				io.WriteString(s, "\n")
+			// Separate frames with newlines, but do not prefix the first frame
+			// with a leading newline so "%+v" on a StackTrace alone is usable
+			// without an initial blank line (#230). Error formatting still
+			// inserts a separator via stack.Format after the error message.
+			for i, f := range st {
+				if i > 0 {
+					io.WriteString(s, "\n")
+				}
 				f.Format(s, verb)
 			}
 		case s.Flag('#'):
