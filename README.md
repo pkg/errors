@@ -57,3 +57,16 @@ Before sending a PR, please discuss your change by raising an issue.
 ## License
 
 BSD-2-Clause
+
+## Running tests
+
+This package predates modules and intentionally has no `go.mod` (zero dependencies).
+From a checkout, initialize a temporary module for local testing:
+
+```bash
+go mod init github.com/pkg/errors
+go test -vet=off ./...
+```
+
+`-vet=off` is needed because a few tests intentionally pass non-constant format
+strings into `Wrapf` / `WithMessagef`.
