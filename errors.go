@@ -109,10 +109,90 @@ func New(message string) error {
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 // Errorf also records the stack trace at the point it was called.
+// If the format specifier includes a %w verb with an error operand,
+// the returned error will implement an Unwrap method returning the operand.
 func Errorf(format string, args ...interface{}) error {
+	err := fmt.Errorf(format, args...)
+	if u, ok := err.(interface{ Unwrap() error }); ok {
+		return &wrapError{
+			msg:   err.Error(),
+			err:   u.Unwrap(),
+			stack: callers(),
+		}
+	}
+	if u, ok := err.(interface{ Unwrap() []error }); ok {
+		return &wrapErrors{
+			msg:   err.Error(),
+			errs:  u.Unwrap(),
+			stack: callers(),
+		}
+	}
 	return &fundamental{
-		msg:   fmt.Sprintf(format, args...),
+		msg:   err.Error(),
 		stack: callers(),
+	}
+}
+
+type wrapError struct {
+	msg string
+	err error
+	*stack
+}
+
+func (w *wrapError) Error() string { return w.msg }
+
+func (w *wrapError) Cause() error { return w.err }
+
+// Unwrap provides compatibility for Go 1.13 error chains.
+func (w *wrapError) Unwrap() error { return w.err }
+
+func (w *wrapError) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			io.WriteString(s, w.msg)
+			w.stack.Format(s, verb)
+			return
+		}
+		fallthrough
+	case 's':
+		io.WriteString(s, w.msg)
+	case 'q':
+		fmt.Fprintf(s, "%q", w.msg)
+	}
+}
+
+type wrapErrors struct {
+	msg  string
+	errs []error
+	*stack
+}
+
+func (w *wrapErrors) Error() string { return w.msg }
+
+func (w *wrapErrors) Cause() error {
+	if len(w.errs) > 0 {
+		return w.errs[0]
+	}
+	return nil
+}
+
+// Unwrap provides compatibility for Go 1.20 error chains.
+func (w *wrapErrors) Unwrap() []error { return w.errs }
+
+func (w *wrapErrors) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			io.WriteString(s, w.msg)
+			w.stack.Format(s, verb)
+			return
+		}
+		fallthrough
+	case 's':
+		io.WriteString(s, w.msg)
+	case 'q':
+		fmt.Fprintf(s, "%q", w.msg)
 	}
 }
 

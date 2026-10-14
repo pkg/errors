@@ -61,6 +61,14 @@ func TestIs(t *testing.T) {
 			},
 			want: true,
 		},
+		{
+			name: "errorf with %w",
+			args: args{
+				err:    Errorf("wrap it: %w", err),
+				target: err,
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -121,6 +129,14 @@ func TestAs(t *testing.T) {
 			},
 			want: true,
 		},
+		{
+			name: "errorf with %w",
+			args: args{
+				err:    Errorf("wrap it: %w", err),
+				target: new(customErr),
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -165,6 +181,11 @@ func TestUnwrap(t *testing.T) {
 		{
 			name: "std errors compatibility",
 			args: args{err: fmt.Errorf("wrap: %w", err)},
+			want: err,
+		},
+		{
+			name: "errorf with %w",
+			args: args{err: Errorf("wrap: %w", err)},
 			want: err,
 		},
 	}
