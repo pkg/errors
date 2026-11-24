@@ -113,62 +113,53 @@ func New(message string) error {
 // the returned error will implement an Unwrap method returning the operand.
 func Errorf(format string, args ...interface{}) error {
 	err := fmt.Errorf(format, args...)
-	if u, ok := err.(interface{ Unwrap() error }); ok {
-		return &wrapError{
-			msg:   err.Error(),
-			err:   u.Unwrap(),
-			stack: callers(),
-		}
-	}
-	if u, ok := err.(interface{ Unwrap() []error }); ok {
-		return &wrapErrors{
-			msg:   err.Error(),
-			errs:  u.Unwrap(),
-			stack: callers(),
-		}
-	}
-	return &fundamental{
+	f := &fundamental{
 		msg:   err.Error(),
 		stack: callers(),
 	}
+	switch u := err.(type) {
+	case interface{ Unwrap() error }:
+		if unwrapped := u.Unwrap(); unwrapped != nil {
+			return &wrapError{
+				fundamental: f,
+				err:         unwrapped,
+			}
+		}
+	case interface{ Unwrap() []error }:
+		errs := u.Unwrap()
+		switch len(errs) {
+		case 0:
+		case 1:
+			if errs[0] != nil {
+				return &wrapError{
+					fundamental: f,
+					err:         errs[0],
+				}
+			}
+		default:
+			return &wrapErrors{
+				fundamental: f,
+				errs:        errs,
+			}
+		}
+	}
+	return f
 }
 
 type wrapError struct {
-	msg string
+	*fundamental
 	err error
-	*stack
 }
-
-func (w *wrapError) Error() string { return w.msg }
 
 func (w *wrapError) Cause() error { return w.err }
 
 // Unwrap provides compatibility for Go 1.13 error chains.
 func (w *wrapError) Unwrap() error { return w.err }
 
-func (w *wrapError) Format(s fmt.State, verb rune) {
-	switch verb {
-	case 'v':
-		if s.Flag('+') {
-			io.WriteString(s, w.msg)
-			w.stack.Format(s, verb)
-			return
-		}
-		fallthrough
-	case 's':
-		io.WriteString(s, w.msg)
-	case 'q':
-		fmt.Fprintf(s, "%q", w.msg)
-	}
-}
-
 type wrapErrors struct {
-	msg  string
+	*fundamental
 	errs []error
-	*stack
 }
-
-func (w *wrapErrors) Error() string { return w.msg }
 
 func (w *wrapErrors) Cause() error {
 	if len(w.errs) > 0 {
@@ -179,22 +170,6 @@ func (w *wrapErrors) Cause() error {
 
 // Unwrap provides compatibility for Go 1.20 error chains.
 func (w *wrapErrors) Unwrap() []error { return w.errs }
-
-func (w *wrapErrors) Format(s fmt.State, verb rune) {
-	switch verb {
-	case 'v':
-		if s.Flag('+') {
-			io.WriteString(s, w.msg)
-			w.stack.Format(s, verb)
-			return
-		}
-		fallthrough
-	case 's':
-		io.WriteString(s, w.msg)
-	case 'q':
-		fmt.Fprintf(s, "%q", w.msg)
-	}
-}
 
 // fundamental is an error that has a message and a stack, but no caller.
 type fundamental struct {

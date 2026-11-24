@@ -198,15 +198,17 @@ func TestErrorfWrapping(t *testing.T) {
 		t.Errorf("Errorf without %%w should not implement Unwrap() error")
 	}
 
-	// Verify %w with nil error operand
+	// Verify %w with nil error operand returns fundamental (no Unwrap)
 	var nilErr error
 	wrapNil := Errorf("wrap nil: %w", nilErr)
-	uNil, ok := wrapNil.(interface{ Unwrap() error })
-	if !ok {
-		t.Fatal("expected wrapNil to implement Unwrap() error")
+	if _, ok := wrapNil.(interface{ Unwrap() error }); ok {
+		t.Errorf("wrapNil should not implement Unwrap() error")
 	}
-	if got := uNil.Unwrap(); got != nil {
-		t.Errorf("wrapNil.Unwrap() = %v, want nil", got)
+	if _, ok := wrapNil.(*fundamental); !ok {
+		t.Errorf("wrapNil type = %T, want *fundamental", wrapNil)
+	}
+	if got := Cause(wrapNil); got != wrapNil {
+		t.Errorf("Cause(wrapNil) = %v, want %v", got, wrapNil)
 	}
 
 	// Verify StackTrace
@@ -252,6 +254,44 @@ func TestErrorfMultiWrap(t *testing.T) {
 	}
 	if got := multi.Error(); got != "first: err1, second: err2" {
 		t.Errorf("multi.Error() = %q, want %q", got, "first: err1, second: err2")
+	}
+	if st, ok := multi.(interface{ StackTrace() StackTrace }); !ok || len(st.StackTrace()) == 0 {
+		t.Errorf("expected multi-wrapped error to have non-empty StackTrace")
+	}
+	if got := fmt.Sprintf("%q", multi); got != `"first: err1, second: err2"` {
+		t.Errorf("%%q format = %q, want %q", got, `"first: err1, second: err2"`)
+	}
+	plusV := fmt.Sprintf("%+v", multi)
+	if !strings.Contains(plusV, "first: err1, second: err2") || !strings.Contains(plusV, "TestErrorfMultiWrap") {
+		t.Errorf("%%+v format missing expected message or stack: %q", plusV)
+	}
+
+	// Verify 1-len []error unwraps as wrapError (Unwrap() error)
+	var nilErr error
+	singleFromMulti := Errorf("first: %w, second: %w", err1, nilErr)
+	if _, ok := singleFromMulti.(*wrapError); !ok {
+		t.Errorf("singleFromMulti type = %T, want *wrapError", singleFromMulti)
+	}
+	if uSingle, ok := singleFromMulti.(interface{ Unwrap() error }); !ok || uSingle.Unwrap() != err1 {
+		t.Errorf("singleFromMulti.Unwrap() = %v, want %v", uSingle, err1)
+	}
+	if got := Cause(singleFromMulti); got != err1 {
+		t.Errorf("Cause(singleFromMulti) = %v, want %v", got, err1)
+	}
+
+	// Verify 0-len []error returns fundamental (no Unwrap)
+	zeroFromMulti := Errorf("first: %w, second: %w", nilErr, nilErr)
+	if _, ok := zeroFromMulti.(*fundamental); !ok {
+		t.Errorf("zeroFromMulti type = %T, want *fundamental", zeroFromMulti)
+	}
+	if _, ok := zeroFromMulti.(interface{ Unwrap() error }); ok {
+		t.Errorf("zeroFromMulti should not implement Unwrap() error")
+	}
+	if _, ok := zeroFromMulti.(interface{ Unwrap() []error }); ok {
+		t.Errorf("zeroFromMulti should not implement Unwrap() []error")
+	}
+	if got := Cause(zeroFromMulti); got != zeroFromMulti {
+		t.Errorf("Cause(zeroFromMulti) = %v, want %v", got, zeroFromMulti)
 	}
 }
 
