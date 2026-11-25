@@ -109,8 +109,10 @@ func (st StackTrace) Format(s fmt.State, verb rune) {
 	case 'v':
 		switch {
 		case s.Flag('+'):
-			for _, f := range st {
-				io.WriteString(s, "\n")
+			for i, f := range st {
+				if i > 0 {
+					io.WriteString(s, "\n")
+				}
 				f.Format(s, verb)
 			}
 		case s.Flag('#'):
@@ -144,9 +146,12 @@ func (s *stack) Format(st fmt.State, verb rune) {
 	case 'v':
 		switch {
 		case st.Flag('+'):
-			for _, pc := range *s {
+			for i, pc := range *s {
+				if i > 0 {
+					io.WriteString(st, "\n")
+				}
 				f := Frame(pc)
-				fmt.Fprintf(st, "\n%+v", f)
+				fmt.Fprintf(st, "%+v", f)
 			}
 		}
 	}
