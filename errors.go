@@ -129,6 +129,9 @@ func (f *fundamental) Format(s fmt.State, verb rune) {
 	case 'v':
 		if s.Flag('+') {
 			io.WriteString(s, f.msg)
+			if f.stack != nil && len(*f.stack) > 0 {
+				io.WriteString(s, "\n")
+			}
 			f.stack.Format(s, verb)
 			return
 		}
@@ -167,6 +170,9 @@ func (w *withStack) Format(s fmt.State, verb rune) {
 	case 'v':
 		if s.Flag('+') {
 			fmt.Fprintf(s, "%+v", w.Cause())
+			if w.stack != nil && len(*w.stack) > 0 {
+				io.WriteString(s, "\n")
+			}
 			w.stack.Format(s, verb)
 			return
 		}

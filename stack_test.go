@@ -224,15 +224,14 @@ func TestStackTraceFormat(t *testing.T) {
 	}, {
 		stackTrace()[:2],
 		"%+v",
-		"\n" +
-			"github.com/pkg/errors.stackTrace\n" +
+		"github.com/pkg/errors.stackTrace\n" +
 			"\t.+/github.com/pkg/errors/stack_test.go:174\n" +
 			"github.com/pkg/errors.TestStackTraceFormat\n" +
 			"\t.+/github.com/pkg/errors/stack_test.go:225",
 	}, {
 		stackTrace()[:2],
 		"%#v",
-		`\[\]errors.Frame{stack_test.go:174, stack_test.go:233}`,
+		`\[\]errors.Frame{stack_test.go:174, stack_test.go:232}`,
 	}}
 
 	for i, tt := range tests {
