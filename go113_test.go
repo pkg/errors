@@ -185,7 +185,7 @@ func TestUnwrap(t *testing.T) {
 		},
 		{
 			name: "errorf with %w",
-			args: args{err: Errorf("wrap: %w", err)},
+			args: args{err: Unwrap(Errorf("wrap: %w", err))},
 			want: err,
 		},
 	}

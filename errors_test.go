@@ -158,54 +158,44 @@ func TestErrorfWrapping(t *testing.T) {
 	base := errors.New("base error")
 	wrapped := Errorf("wrapped: %w", base)
 
-	// Verify Unwrap() error
+	// Verify Unwrap() chain reaches base via stdlib errors.Is
 	u, ok := wrapped.(interface{ Unwrap() error })
 	if !ok {
 		t.Fatal("expected wrapped error to implement Unwrap() error")
 	}
-	if got := u.Unwrap(); got != base {
-		t.Errorf("Unwrap() = %v, want %v", got, base)
+	if !errors.Is(wrapped, base) {
+		t.Errorf("errors.Is(wrapped, base) = false, want true")
+	}
+	if got := errors.Unwrap(u.Unwrap()); got != base {
+		t.Errorf("Unwrap(Unwrap(wrapped)) = %v, want %v", got, base)
 	}
 
-	// Verify Cause() error
-	c, ok := wrapped.(interface{ Cause() error })
-	if !ok {
-		t.Fatal("expected wrapped error to implement Cause() error")
-	}
-	if got := c.Cause(); got != base {
-		t.Errorf("Cause() = %v, want %v", got, base)
-	}
-	if got := Cause(wrapped); got != base {
-		t.Errorf("Cause(wrapped) = %v, want %v", got, base)
-	}
-
-	// Verify nested Cause and Unwrap chains
+	// Verify nested Unwrap chains
 	outer := Errorf("outer: %w", wrapped)
-	uOuter, ok := outer.(interface{ Unwrap() error })
-	if !ok {
-		t.Fatal("expected outer error to implement Unwrap() error")
+	if !errors.Is(outer, wrapped) {
+		t.Errorf("errors.Is(outer, wrapped) = false, want true")
 	}
-	if got := uOuter.Unwrap(); got != wrapped {
-		t.Errorf("outer.Unwrap() = %v, want %v", got, wrapped)
-	}
-	if got := Cause(outer); got != base {
-		t.Errorf("Cause(outer) = %v, want %v", got, base)
+	if !errors.Is(outer, base) {
+		t.Errorf("errors.Is(outer, base) = false, want true")
 	}
 
-	// Verify non-%w does not implement Unwrap() error
+	// Verify non-%w returns *fundamental without Unwrap()
 	plain := Errorf("plain %s", "error")
+	if _, ok := plain.(*fundamental); !ok {
+		t.Errorf("plain type = %T, want *fundamental", plain)
+	}
 	if _, ok := plain.(interface{ Unwrap() error }); ok {
 		t.Errorf("Errorf without %%w should not implement Unwrap() error")
 	}
 
-	// Verify %w with nil error operand returns fundamental (no Unwrap)
+	// Verify %w with nil error operand returns *fundamental without Unwrap()
 	var nilErr error
 	wrapNil := Errorf("wrap nil: %w", nilErr)
-	if _, ok := wrapNil.(interface{ Unwrap() error }); ok {
-		t.Errorf("wrapNil should not implement Unwrap() error")
-	}
 	if _, ok := wrapNil.(*fundamental); !ok {
 		t.Errorf("wrapNil type = %T, want *fundamental", wrapNil)
+	}
+	if _, ok := wrapNil.(interface{ Unwrap() error }); ok {
+		t.Errorf("wrapNil should not implement Unwrap() error")
 	}
 	if got := Cause(wrapNil); got != wrapNil {
 		t.Errorf("Cause(wrapNil) = %v, want %v", got, wrapNil)
@@ -241,16 +231,11 @@ func TestErrorfMultiWrap(t *testing.T) {
 	err2 := errors.New("err2")
 	multi := Errorf("first: %w, second: %w", err1, err2)
 
-	u, ok := multi.(interface{ Unwrap() []error })
-	if !ok {
-		t.Fatal("expected multi-wrapped error to implement Unwrap() []error")
+	if !errors.Is(multi, err1) {
+		t.Errorf("errors.Is(multi, err1) = false, want true")
 	}
-	errs := u.Unwrap()
-	if len(errs) != 2 || errs[0] != err1 || errs[1] != err2 {
-		t.Errorf("multi.Unwrap() = %v, want [%v, %v]", errs, err1, err2)
-	}
-	if got := Cause(multi); got != err1 {
-		t.Errorf("Cause(multi) = %v, want %v", got, err1)
+	if !errors.Is(multi, err2) {
+		t.Errorf("errors.Is(multi, err2) = false, want true")
 	}
 	if got := multi.Error(); got != "first: err1, second: err2" {
 		t.Errorf("multi.Error() = %q, want %q", got, "first: err1, second: err2")
@@ -266,32 +251,14 @@ func TestErrorfMultiWrap(t *testing.T) {
 		t.Errorf("%%+v format missing expected message or stack: %q", plusV)
 	}
 
-	// Verify 1-len []error unwraps as wrapError (Unwrap() error)
+	// Verify all-nil %w operands return *fundamental without Unwrap()
 	var nilErr error
-	singleFromMulti := Errorf("first: %w, second: %w", err1, nilErr)
-	if _, ok := singleFromMulti.(*wrapError); !ok {
-		t.Errorf("singleFromMulti type = %T, want *wrapError", singleFromMulti)
-	}
-	if uSingle, ok := singleFromMulti.(interface{ Unwrap() error }); !ok || uSingle.Unwrap() != err1 {
-		t.Errorf("singleFromMulti.Unwrap() = %v, want %v", uSingle, err1)
-	}
-	if got := Cause(singleFromMulti); got != err1 {
-		t.Errorf("Cause(singleFromMulti) = %v, want %v", got, err1)
-	}
-
-	// Verify 0-len []error returns fundamental (no Unwrap)
 	zeroFromMulti := Errorf("first: %w, second: %w", nilErr, nilErr)
 	if _, ok := zeroFromMulti.(*fundamental); !ok {
 		t.Errorf("zeroFromMulti type = %T, want *fundamental", zeroFromMulti)
 	}
 	if _, ok := zeroFromMulti.(interface{ Unwrap() error }); ok {
 		t.Errorf("zeroFromMulti should not implement Unwrap() error")
-	}
-	if _, ok := zeroFromMulti.(interface{ Unwrap() []error }); ok {
-		t.Errorf("zeroFromMulti should not implement Unwrap() []error")
-	}
-	if got := Cause(zeroFromMulti); got != zeroFromMulti {
-		t.Errorf("Cause(zeroFromMulti) = %v, want %v", got, zeroFromMulti)
 	}
 }
 

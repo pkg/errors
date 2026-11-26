@@ -110,66 +110,26 @@ func New(message string) error {
 // as a value that satisfies error.
 // Errorf also records the stack trace at the point it was called.
 // If the format specifier includes a %w verb with an error operand,
-// the returned error will implement an Unwrap method returning the operand.
+// the returned error wraps the result of fmt.Errorf with a stack trace.
 func Errorf(format string, args ...interface{}) error {
 	err := fmt.Errorf(format, args...)
-	f := &fundamental{
+	switch u := err.(type) {
+	case interface{ Unwrap() error }:
+		if u.Unwrap() != nil {
+			return &withStack{err, callers()}
+		}
+	case interface{ Unwrap() []error }:
+		for _, unwrapped := range u.Unwrap() {
+			if unwrapped != nil {
+				return &withStack{err, callers()}
+			}
+		}
+	}
+	return &fundamental{
 		msg:   err.Error(),
 		stack: callers(),
 	}
-	switch u := err.(type) {
-	case interface{ Unwrap() error }:
-		if unwrapped := u.Unwrap(); unwrapped != nil {
-			return &wrapError{
-				fundamental: f,
-				err:         unwrapped,
-			}
-		}
-	case interface{ Unwrap() []error }:
-		errs := u.Unwrap()
-		switch len(errs) {
-		case 0:
-		case 1:
-			if errs[0] != nil {
-				return &wrapError{
-					fundamental: f,
-					err:         errs[0],
-				}
-			}
-		default:
-			return &wrapErrors{
-				fundamental: f,
-				errs:        errs,
-			}
-		}
-	}
-	return f
 }
-
-type wrapError struct {
-	*fundamental
-	err error
-}
-
-func (w *wrapError) Cause() error { return w.err }
-
-// Unwrap provides compatibility for Go 1.13 error chains.
-func (w *wrapError) Unwrap() error { return w.err }
-
-type wrapErrors struct {
-	*fundamental
-	errs []error
-}
-
-func (w *wrapErrors) Cause() error {
-	if len(w.errs) > 0 {
-		return w.errs[0]
-	}
-	return nil
-}
-
-// Unwrap provides compatibility for Go 1.20 error chains.
-func (w *wrapErrors) Unwrap() []error { return w.errs }
 
 // fundamental is an error that has a message and a stack, but no caller.
 type fundamental struct {
