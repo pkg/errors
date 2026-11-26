@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -139,6 +140,10 @@ func TestErrorf(t *testing.T) {
 	}{
 		{Errorf("read error without format specifiers"), "read error without format specifiers"},
 		{Errorf("read error with %d format specifier", 1), "read error with 1 format specifier"},
+		{Errorf("read error: %w", io.EOF), "read error: EOF"},
+		{Errorf("%w: client error", io.EOF), "EOF: client error"},
+		{Errorf("read %d bytes error: %w", 42, io.EOF), "read 42 bytes error: EOF"},
+		{Errorf("%w", io.EOF), "EOF"},
 	}
 
 	for _, tt := range tests {
@@ -146,6 +151,114 @@ func TestErrorf(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("Errorf(%v): got: %q, want %q", tt.err, got, tt.want)
 		}
+	}
+}
+
+func TestErrorfWrapping(t *testing.T) {
+	base := errors.New("base error")
+	wrapped := Errorf("wrapped: %w", base)
+
+	// Verify Unwrap() chain reaches base via stdlib errors.Is
+	u, ok := wrapped.(interface{ Unwrap() error })
+	if !ok {
+		t.Fatal("expected wrapped error to implement Unwrap() error")
+	}
+	if !errors.Is(wrapped, base) {
+		t.Errorf("errors.Is(wrapped, base) = false, want true")
+	}
+	if got := errors.Unwrap(u.Unwrap()); got != base {
+		t.Errorf("Unwrap(Unwrap(wrapped)) = %v, want %v", got, base)
+	}
+
+	// Verify nested Unwrap chains
+	outer := Errorf("outer: %w", wrapped)
+	if !errors.Is(outer, wrapped) {
+		t.Errorf("errors.Is(outer, wrapped) = false, want true")
+	}
+	if !errors.Is(outer, base) {
+		t.Errorf("errors.Is(outer, base) = false, want true")
+	}
+
+	// Verify non-%w returns *fundamental without Unwrap()
+	plain := Errorf("plain %s", "error")
+	if _, ok := plain.(*fundamental); !ok {
+		t.Errorf("plain type = %T, want *fundamental", plain)
+	}
+	if _, ok := plain.(interface{ Unwrap() error }); ok {
+		t.Errorf("Errorf without %%w should not implement Unwrap() error")
+	}
+
+	// Verify %w with nil error operand returns *fundamental without Unwrap()
+	var nilErr error
+	wrapNil := Errorf("wrap nil: %w", nilErr)
+	if _, ok := wrapNil.(*fundamental); !ok {
+		t.Errorf("wrapNil type = %T, want *fundamental", wrapNil)
+	}
+	if _, ok := wrapNil.(interface{ Unwrap() error }); ok {
+		t.Errorf("wrapNil should not implement Unwrap() error")
+	}
+	if got := Cause(wrapNil); got != wrapNil {
+		t.Errorf("Cause(wrapNil) = %v, want %v", got, wrapNil)
+	}
+
+	// Verify StackTrace
+	st, ok := wrapped.(interface{ StackTrace() StackTrace })
+	if !ok {
+		t.Fatal("expected wrapped error to implement StackTrace()")
+	}
+	if len(st.StackTrace()) == 0 {
+		t.Error("expected non-empty stack trace")
+	}
+
+	// Verify formatting verbs
+	if got := fmt.Sprintf("%s", wrapped); got != "wrapped: base error" {
+		t.Errorf("%%s format = %q, want %q", got, "wrapped: base error")
+	}
+	if got := fmt.Sprintf("%v", wrapped); got != "wrapped: base error" {
+		t.Errorf("%%v format = %q, want %q", got, "wrapped: base error")
+	}
+	if got := fmt.Sprintf("%q", wrapped); got != `"wrapped: base error"` {
+		t.Errorf("%%q format = %q, want %q", got, `"wrapped: base error"`)
+	}
+	plusV := fmt.Sprintf("%+v", wrapped)
+	if !strings.Contains(plusV, "wrapped: base error") || !strings.Contains(plusV, "TestErrorfWrapping") {
+		t.Errorf("%%+v format missing expected message or stack: %q", plusV)
+	}
+}
+
+func TestErrorfMultiWrap(t *testing.T) {
+	err1 := errors.New("err1")
+	err2 := errors.New("err2")
+	multi := Errorf("first: %w, second: %w", err1, err2)
+
+	if !errors.Is(multi, err1) {
+		t.Errorf("errors.Is(multi, err1) = false, want true")
+	}
+	if !errors.Is(multi, err2) {
+		t.Errorf("errors.Is(multi, err2) = false, want true")
+	}
+	if got := multi.Error(); got != "first: err1, second: err2" {
+		t.Errorf("multi.Error() = %q, want %q", got, "first: err1, second: err2")
+	}
+	if st, ok := multi.(interface{ StackTrace() StackTrace }); !ok || len(st.StackTrace()) == 0 {
+		t.Errorf("expected multi-wrapped error to have non-empty StackTrace")
+	}
+	if got := fmt.Sprintf("%q", multi); got != `"first: err1, second: err2"` {
+		t.Errorf("%%q format = %q, want %q", got, `"first: err1, second: err2"`)
+	}
+	plusV := fmt.Sprintf("%+v", multi)
+	if !strings.Contains(plusV, "first: err1, second: err2") || !strings.Contains(plusV, "TestErrorfMultiWrap") {
+		t.Errorf("%%+v format missing expected message or stack: %q", plusV)
+	}
+
+	// Verify all-nil %w operands return *fundamental without Unwrap()
+	var nilErr error
+	zeroFromMulti := Errorf("first: %w, second: %w", nilErr, nilErr)
+	if _, ok := zeroFromMulti.(*fundamental); !ok {
+		t.Errorf("zeroFromMulti type = %T, want *fundamental", zeroFromMulti)
+	}
+	if _, ok := zeroFromMulti.(interface{ Unwrap() error }); ok {
+		t.Errorf("zeroFromMulti should not implement Unwrap() error")
 	}
 }
 

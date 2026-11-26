@@ -109,9 +109,24 @@ func New(message string) error {
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
 // Errorf also records the stack trace at the point it was called.
+// If the format specifier includes a %w verb with an error operand,
+// the returned error wraps the result of fmt.Errorf with a stack trace.
 func Errorf(format string, args ...interface{}) error {
+	err := fmt.Errorf(format, args...)
+	switch u := err.(type) {
+	case interface{ Unwrap() error }:
+		if u.Unwrap() != nil {
+			return &withStack{err, callers()}
+		}
+	case interface{ Unwrap() []error }:
+		for _, unwrapped := range u.Unwrap() {
+			if unwrapped != nil {
+				return &withStack{err, callers()}
+			}
+		}
+	}
 	return &fundamental{
-		msg:   fmt.Sprintf(format, args...),
+		msg:   err.Error(),
 		stack: callers(),
 	}
 }
